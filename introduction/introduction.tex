@@ -1,0 +1,112 @@
+\chapter{Introduction}
+
+Natural language can be used as metadata for any sort of data.
+To make it machine-readable and valuable for a task at hand, one needs to extract relevant pieces of information about it consistently.
+If done successfully, given natural language explanations could even be used to explain unseen classification examples or improve the video classification performance.
+In this project, a method for the automatic extraction of valuable information from language is studied as part of a bottleneck-based video classification pipeline.
+
+
+
+
+
+\section{Problem Setup}
+
+The project aims to design a general method for extracting valuable information from natural language.
+The initial attempt at designing such a method intends to tackle a specific problem well before expanding its domain.
+The problem this work is helping to solve is the problem of the classification of short baseball video sequences.
+% TODO fix
+In particular, it targets the MLB-V2E dataset  \cite{RefWorks:RefID:16-2021automatic}.
+This dataset consists of the following:
+
+ - A short video of a baseball sequence (\href{www.mlb.com}{MLB} (Major League Baseball) clips).
+ 
+ - Label describing the outcome which occurred in it: strike, foul, ball, none, out.
+
+ - Crowd-sourced brief explanation of why the outcome occurred.
+ 
+ 
+\begin{center}
+\begin{tabular}{ |p{1.5cm}|p{1.5cm}|p{9cm}|p{1.7cm}|  }
+ \hline
+ \multicolumn{4}{|c|}{Extract from MLB-V2E dataset} \\
+ \hline
+ id, $n$ & label, $l_n$ & explanation, $e_n$& video, $v_n$\\
+ \hline
+ 1 & strike & The batter did not swing. The ball was in the strike zone. & N/A \\
+ 2 & foul & the batter hit the ball into the stands and it landed in foul territory & N/A \\
+ 3 & ball & The hitter didn’t swing. The ball was outside the strike zone. & N/A \\
+ 4 & none & The video did not load. & N/A \\
+ 5 & out & the batter hit the ball and it was caught by the fielder & N/A \\
+ 
+ \hline
+\end{tabular}
+\end{center}
+
+
+% TODO insert reference to the classifier %
+Additionally, the problem is explored within the context of a concept bottleneck classifier. 
+In that context, \textbf{concepts} are defined as syntactic generalisations of atomic sentences. 
+Moreover, an \textbf{atomic sentence} is a sentence that an NLP expert cannot decompose into multiple sentences.
+The system designed in this project should be general-purpose; changing the dataset on which the concept bottleneck classifier operates should immediately produce relevant concept sentences for a different dataset.
+
+As such, this project aims to propose a novel method, combining techniques from natural language processing, deep learning and logic-based learning, that would extract domain-independent concept sentences.
+
+
+\section{Limitations and Assumptions}
+% Probably talk about in the initial project things.
+
+At the moment, only the syntactic concept generalisation is being made. 
+A consequence of using syntactic concept generalisation is that the events happening in the video are isolated as sentences with no content linking between them. 
+Additionally, the tokens in a generalised concept sentence must first occur in the original one.
+This procedure may result in grammatically incorrect sentences.
+For example, consider a sentence: \emph{The left fielder caught the ball.}.
+With our current approach, the system can extract the following sentence \emph{The fielder caught the ball.}.
+However, the issue is that it can be unclear who \emph{the fielder} is now because it was previously determined by the adjective \emph{left}.
+
+An extension might be able to relax this limitation.
+The most straightforward possible approach for resolving this issue may replace \emph{the} with \emph{a} in a generalisation where additional information about the determined noun is removed.
+
+More advanced generalisation could involve swapping words out for their synonyms.
+An additional extension could involve linking entities from one sentence to another. 
+
+
+
+\section{Objectives}
+
+The objectives of this project are:
+
+ - Develop and evaluate a general syntactic framework for extracting concept sentences from any given sentence. The process would be split into decomposing non-atomic sentences into atomic and generating concept sentences from atomic sentences.
+ 
+ - Explore how does this framework aid deep neural network models in the context of video classification, namely whether an improvement is achieved for the MLB-V2E dataset \cite{RefWorks:RefID:16-2021automatic}.
+
+
+ - Time permitting, generate a natural language explanation of the label chosen by the classifier. 
+
+
+\section{Challenges}
+
+This section highlights challenges that are anticipated to happen and a brief overview of its difficulties.
+The section will be revised upon completion of the project once the topics' complexity is more evident.
+
+The following questions will be difficult but necessary to answer as a part of this project:
+
+ - \emph{How should a concept extracted from natural language be defined?} Making a helpful concept and immediately extensible to other domains may be difficult. One cannot use expert knowledge to help craft features that the subsequent architecture should use.
+ 
+ 
+ - \emph{How will the concept extraction pipeline be scaled with a large amount of data?} The proposed system will include logic-based learning systems ILASP \cite{RefWorks:RefID:18-law2020ilasp} to extract syntactic concept sentences. 
+ Unfortunately, the system is not scalable with respect to hypothesis space. On the other hand, more scalable alternative FastLAS \cite{RefWorks:RefID:19-law2020fastlas:} includes limitations that may be impossible to workaround.
+ 
+ - \emph{How is an atomic sentence decomposed into a concept sentence?} This is the critical problem the system must resolve to be used.
+
+ - \emph{How should the sentences be decomposed into atomic sentences?} This is one of the critical problems this system would need to resolve to be applied effectively. It may become a much more complex issue than concept sentence extraction, which can be designed as graph pruning of a dependency graph.
+ 
+
+
+\section{Contributions}
+
+Not relevant yet.
+
+% What is the problem?
+% Why is it interesting?
+% What is the main idea for solving it?
+

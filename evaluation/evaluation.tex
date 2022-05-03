@@ -1,0 +1,31 @@
+\chapter{Evaluation}
+
+
+\subsection{Old Evaluation Stuff}
+
+Despite this project being closely tied to the concept extraction from text, it will be researched and evaluated in the context of video classification.
+Utilising human-based explanations to improve the video classification outcome is quite a novel area since there are no projects that do precisely so.
+As such, there is no previous work the project will strive to do better than.\\
+
+However, for the approach proposed in the project to be considered a success, it must:
+
+ - Extract syntactic concept generalisations and create atomic sentences well. Both parts tasks will attempt to construct the solutions using machine learning/logic-based learning methods in a supervised setting. So, the methods proposed in this project should achieve small errors on relevant metrics.
+ 
+
+ - Do better than previous work which the supervisors have completed. As mentioned in the section \ref{completed-work}, this project continues on the paper currently under review for the ICLR 2022 conference. So, improving upon the method presented in the referenced work is imperative.
+ 
+ % INSERT reference
+ - Outperform all attempts made on the MLB-YouTube \cite{RefWorks:RefID:3-piergiovanni2018fine-grained} dataset. The dataset used, MLB-V2E \cite{RefWorks:RefID:16-2021automatic}, has taken its video clips from the segmented MLB-YouTube dataset and augmented it with crowd-sourced explanations. Given that the explanations were created by candidates familiar with baseball rules, they should contain all information needed to make correct classifications. 
+ In addition, Piergiovanni et al. \cite{RefWorks:RefID:3-piergiovanni2018fine-grained} argued that the MLB-YouTube is a challenging dataset to classify since the clips look similar. They are taken from the same camera angle, and the videos in different classes only differ by a fine-grained action.
+ So, with explanations, the overall task is much easier.
+ 
+ - Generalise to other datasets. The relevant metrics measuring error on concept generalisation and atomic sentence extraction should be similar when the method is applied to other datasets. It is possible to evaluate this project on the MSR-V2E \cite{RefWorks:RefID:16-2021automatic} dataset, which contains clips from everyday life and compare the performance with the MLB-V2E \cite{RefWorks:RefID:16-2021automatic} dataset.
+ 
+ - Be scalable. The performance of the concept extraction pipeline should not deteriorate when a bigger number of examples is given. To evaluate the scalability requirement, multiple models will be trained with a different number of examples and their performances compared.
+ 
+ - Be fast enough. This is a practical requirement. The machine learning model must not take too long to learn the needed representation. For example, it is unfeasible to have the model learn the concepts for more than 50 hours on the MLB-V2E dataset since one would need to evaluate it multiple times to facilitate the evaluation section of this project. Additionally, using the trained model on a test set example should be quick. The requirement mentioned will be measured by tracking how much time a model takes to complete a task.
+ 
+ - Enable adding MLB-V2E explanations for a video quickly. The concepts constructed by this project will be grammatically correct sentences. So, given that a concept can be detected in the video, it should be easy to create multiple sentences out of it. Further evaluation plans within this area will be considered later, depending on the time available for video explanation generation. Possibilities include having subjects judge whether the explanation is: incorrect both grammatically and logically, incorrect only grammatically, incorrect logically, good.\\
+ 
+The dataset with explanations is more costly and time-consuming to construct than the dataset without it.
+So, the final evaluation should also quantify this requirement (e.g. in terms of volunteer hours spent) while judging the feasibility and success of classification with crowd-sourced explanations.
