@@ -5,6 +5,9 @@
 % Extra maths symbols (nexists)
 \usepackage{amssymb}
 
+
+\usepackage[dvipsnames]{xcolor}
+
 %% Language and font encodings
 \usepackage[english]{babel}
 \usepackage[utf8]{inputenc}
@@ -25,11 +28,31 @@
 % Controls spacing
 \usepackage{parskip}
 
+% verbatim with maths (lstlisting)
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily,
+  mathescape,
+  breaklines=true,
+  columns=flexible,
+}
+
+
+% Table column centering
+\usepackage{array}
+\newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}
+
 % For references
 \usepackage[backend=biber]{biblatex}
 \addbibresource{bibs/export.bib}
 
+% Example numbering
+\usepackage{amsthm}
 
+% Enumerate examples
+\theoremstyle{definition} % Use normal font for examples
+\newtheorem{example}{Example}
 
 
 \title{Automatic Concept Extraction in a Video Classification Pipeline Using Natural Language Explanations}
@@ -37,6 +60,10 @@
 % Update supervisor and other title stuff in title/title.tex
 
 \begin{document}
+\renewcommand{\vec}[1]{\textbf{#1}}
+\newcommand{\curly}[1]{\mathcal{#1}}
+
+
 \input{title/title.tex}
 
 \begin{abstract}
@@ -49,6 +76,7 @@ The abstract will go here
 The acknowledgements will go here
 \end{abstract}
 
+
 \tableofcontents
 \listoffigures
 \listoftables
@@ -56,8 +84,10 @@ The acknowledgements will go here
 \input{introduction/introduction.tex}
 \input{background/background.tex}
 \input{project/project.tex}
-\input{project-work/project-work.tex}
+\input{solving-nlp-tasks-logically/solving-nlp-tasks-logically}
+\input{logic-based-classification/logic-based-classification.tex}
 \input{implementation/implementation}
+\input{combining-everything-together/combining-everything-together}
 \input{evaluation/evaluation.tex}
 \input{conclusion/conclusion.tex}
 \input{ethics/ethics.tex}

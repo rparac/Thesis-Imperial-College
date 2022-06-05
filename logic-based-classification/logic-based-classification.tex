@@ -1,0 +1,299 @@
+\chapter{Logic-Based Classification}
+
+In order to aid interpretability, a probabilistic classification methods using an ILP system has been developed.
+The ILP system utilised for this task is FastLAS \cite{RefWorks:RefID:19-law2020fastlas:}, a scalable system able to incorporate criteria for domain-specific optimisation.
+As the results returned consists of logical predicates, they are immediately interpretable.
+
+% INSERT Daniel's paper reference
+The main idea is to generate examples with higher noise penalties that are more likely to occur, similar to X.
+However, we aim to use those penalties to find the most likley solution.
+
+
+\section{Choosing FastLAS Example Penalties}
+
+% INSERT reference to background section decomposable
+FastLAS can find an optimal solution with respect to a scoring function of kind ($\curly{S} + \curly{S}_{pen}$), where $\curly{S}$ is a decomposable scoring function () and $\curly{S}_{pen}$ is a sum of all uncovered example penalties.
+
+In this section, we attempt to find the appropriate scoring function $\curly{S}$ and values for example penalties such that the final solution is as likely as possible given the learning task tuple $T = \langle B, M, E_{prob} \rangle$. 
+
+\subsection{Used Notation}
+
+Let our set of examples $E_{prob}$ be $\{(\vec{x}_e, y_e)\}_{e=1}^{E} \in \curly{E}$ with $E$ examples. 
+An example $(\vec{x}_e, y_e)$ consist of a vector of concept probabilities $\vec{x}_e = (x_{ec})_{c=1}^C$ and a label $y_e \in \curly{L}$ assigned to the example $e$ from the set of possible labels $\curly{L}$.
+The symbol $x_{ec}$ denotes a priori probability that concept $c$ takes truth value (=1) in example $e$.
+Moreover, $C$ is the number of extracted concepts for a given problem. \\
+We can represent examples as a matrix of concept probabilities.  
+The examples can be represented as an input matrix of concept probabilities $\vec{X} = (\vec{x}_e^T)_{e=1}^E$ and an output vector of target labels $\vec{y} = (y_e)_{e=1}^E$.
+
+Let $\curly{H}$ be the set of all possible hypotheses. The term $p(y_e|H, \vec{x}_{e})$ represents the probability that the example $e$ is covered, for any hypothesis $H \in \curly{H}$,
+
+
+We further introduce notation for grounded examples, as answer sets can only contain grounded atoms.
+A grounded example $(\vec{z}_e, y_e)$ is an example where each concept $c$ in an example $e$ is assigned a truth value $z_{ec} \in \{0,1\}$ (integer form). 
+The term $\vec{z}_e = (z_{ec})_{c=1}^C \in \curly{Z}_e$  is a binary vector representing the ground assignment. 
+
+A more convenient form of the final solution is obtained by using the following restriction on the set of groundings $\curly{Z}_e$ for each hypothesis $H$ and each label $\ell \in \curly{L}$:
+\begin{align}
+\curly{Z}_{e,h,\ell} = \left\{\left. \vec{z} \in \curly{Z}_e \; \right | h, \vec{z} \models \ell \right\}
+\end{align}
+
+\subsection{Determining Optimal Example Penalty}
+
+We want to choose the example penalties such that the FastLAS output hypothesis $H$ is the maximum-likelihood hypothesis $H_{\text{ML}}$, i.e. the output hypothesis should satisfy the following equation:
+\begin{align}
+H_{\text{ML}} = \arg\max_{H}
+p(\vec{y}|H, \vec{X})
+\end{align}
+
+Making an assumption that given a model and concept probabilities, the labels for any two examples are conditionally independent we can rewrite the term $p(\vec{y}|H, \vec{X})$ in the following manner:
+\begin{align}
+p(\vec{y}|H, \vec{X})
+= \prod_{e} p(y_e|H, \vec{x}_e)
+\end{align}
+
+
+As the $ln = log_e$ function is monotonically increasing in the range $(0, \infty)$ and as the above equation produces values in that range, it is equivalent to maximising the $ln$, resulting in the following optimisation target:
+\begin{align}
+H_{\text{ML}}
+& = \arg\max_{H}
+\ln p(\vec{y}|H, \vec{X}) \nonumber \\
+& = \arg\max_{H}
+\sum_{e} \ln p(y_e|H, \vec{x}_e) \nonumber \\
+& = \arg\min_{H}
+-\sum_{e} \ln p(y_e|H, \vec{x}_e)
+\end{align}
+
+
+% TODO: define Z
+We can now calculate the probability that label $y_e$ for example $e$ is covered by a hypothesis $h$ where we know the set of concept probabilities $\vec{x}_e$.
+That probability is computed by considering all possible grounding that $\vec{x}_e$ induces.
+It is given by:
+\begin{align}
+p(y_e|H, \vec{x}_e)
+& = \frac{p(\vec{x}_e | H, y_e)p(y_e | H)}{p(\vec{x}_e|H)} \\
+& = \sum_{\vec{z} \in \curly{Z}} p(y_e) \\
+& = \sum_{\vec{z} \in \curly{Z}} p(y_e|H, \vec{z})
+p(\vec{z}| \vec{x}_e)
+\end{align}
+
+\subsection{Introduction}
+
+
+
+
+The probability that a set of concepts $\vec{c}_e$ associated with example $e$ takes any grounding $\vec{z}_e$ is determined by its concept probabilities $\vec{x}_{e}$ in the following way:
+
+\begin{align}
+p(\vec{z}_e | \vec{x}_e)
+& = \prod_{i} x_{ei}^{z_{ei}} (1-x_{ei})^{1-z_{ei}}
+\end{align}
+
+With grounded examples, it either is or is not entailed by some hypothesis $h \in \curly{H}$.
+Interpreting this in probabilistic form as:
+\begin{align}
+p(y_e | \vec{z}_e, h) =
+\begin{cases}
+1 & \text{if } h, \vec{z}_e \models y_e \\
+0 & \text{otherwise}
+\end{cases}
+\end{align}
+
+
+
+Then the probability of a label given a hypothesis and concept probabilities $p(y_e | \vec{x}_e, h)$ can be rewritten as:
+\begin{align}
+p(y_e|h, \vec{x}_e)
+= \sum_{\vec{z} \in \curly{Z}_{h,y_e}}
+p(\vec{z}| \vec{x}_e)
+\end{align}
+
+% Stopped editing here
+\subsection{Maximum likelihood hypothesis}
+
+#%% md
+
+### But ILASP doesn't work with non-integers
+
+Well, minimising $-\ln p(\vec{y}|h, \vec{X})$ is equivalent to minimising $-Kp(\vec{y}|h, \vec{X})$ for any positive real number $K$. Let's consider a large value $K \in \reals^+$, and then round $K$ multiplied by each term in the sum to the nearest integer. Because for large enough $K$:
+\begin{align}
+-K L = -K \ln p(\vec{y}|h, \vec{X})
+& = -\sum_{e} K\ln p(y_e|h, \vec{x}_e)
+& \approx -\sum_{e} \text{round}\left(K\ln \sum_{\vec{z} \in \curly{Z}_{h, y_e}} p(\vec{z}|,\vec{x}_e) \right)
+\end{align}
+
+And so in summary,
+\begin{align}
+\arg\max_{h}\ln p(\vec{y}|h, \vec{X}) 
+& = \arg\max_{h} \left( -K \ln p(\vec{y}|h, \vec{X}) \right) \\
+& \approx \arg\max_h \left( -\sum_{e} \text{round}\left(K\ln \sum_{\vec{z} \in \curly{Z}_{h, y_e}} p(\vec{z}|,\vec{x}_e) \right)\right)
+\end{align}
+
+#%% md
+
+### But ILASP doesn't accept probabilistic facts
+
+This is the trickiest bit in my opinion.
+
+For every candidate hypothesis that ILASP evaluates, it checks a collection of grounded examples and each example that it doesn't cover it assigns it a penalty (those it covers do not get penalised). Together those penalties add up to a total example based penalty for hypothesis $h$. I am arguing that we want for the sum of these penalties to approximate something like the log likelihood $\ln p(\vec{y}|h, \vec{X})$ or some fixed positive multiple of $L$ plus some fixed additive constant.
+
+The natural first step is to think about breaking the penalty into terms $\ln p(y_e|h, \vec{x}_e)$, one per probabilistic example $e$. But now we would like to approximate this probability in terms of samples $\vec{z} \sim p(\vec{z_i}|\vec{x}_e)$. To do this, we must express $\ln p(y_e|h, \vec{x}_e)$ as an expectation over $p(\vec{z_i}|\vec{x}_e)$ then we can approximate that with samples.
+
+Well, we first remind ourselves that:
+\begin{align}
+p(y_e|h, \vec{x}_e)
+= \sum_{\vec{z} \in \curly{Z}} p(y_e|\vec{z},h)
+p(\vec{z}| \vec{x}_e)
+= \expct_{\vec{z} \sim p(\vec{z}| \vec{x}_e)}[p(y_e|\vec{z},h)]
+\end{align}
+
+Now let us think about the log of that, we use Jensen's inequality to get the final part:
+\begin{align}
+\ln p(y_e|h, \vec{x}_e)
+&= \ln \expct_{\vec{z} \sim p(\vec{z}| \vec{x}_e)}[p(y_e|\vec{z},h)] \\
+&\leq \expct_{\vec{z} \sim p(\vec{z}| \vec{x}_e)}[\ln  p(y_e|\vec{z},h)]
+\end{align}
+
+If this bound were sufficiently tight then we might use this as an alternative penalty. Now we can estimate the expectation by sampling $I$ ground examples for example e, where ground examples are $\vec{x}_{ei} \sim p(\vec{z}| \vec{x}_e)$, then 
+\begin{align}
+\expct_{\vec{z} \sim p(\vec{z}| \vec{x}_e)}[\ln  p(y_e|\vec{z},h)]
+\approx \frac{1}{I} \sum_{i=1}^{I} \ln  p(y_e|\vec{z}_i,h)
+\end{align}
+
+However, I am not sure that helps us as $\ln p(y_e|\vec{z},h)$ is either $\ln 1$ or $\ln 0$. We might be able to do something with this by allowing a label to be incorrect with some small error $\epsilon > 0$, such that $p(y_e|\vec{z},h) = 1- \epsilon$ if $h, z \models y_e $ and $p(y_e|\vec{z},h) = \epsilon$ if $h, z \not\models y_e $ but that isn't the cleanest approach. Let's assume we were to do that though, then  for each probabilistic example $e$ we would have a collection of $I$ of ground examples where:
+
+* modelled grounded examples $\vec{z}_{ei}$ such that $h, \vec{z}_{ei} \models y_e$ were (ideally) penalised (up to proportionality) with penalty
+\begin{align}
+P^{+}_{ei} \propto -\ln  p(y_e|\vec{z}_i,h) = -\ln (1- \epsilon) \approx 0
+\end{align}
+* And non-modelled grounded examples $\vec{z}_{ei}$ such that $h, \vec{z}_{ei} \not\models y_e$ were penalised (up to proportionality) with penalty
+\begin{align}
+P^{-}_{ei} \propto -\ln  p(y_e|\vec{z}_i,h) = -\ln \epsilon
+\end{align}
+* for sufficiently small $\epsilon$ the modelled grounded example penalties $P^{+}_{ei}$ are so close to $0$ as to not matter.
+
+And so in summary, with this approach we have:
+\begin{align}
+\arg\max_{h} \ln p(\vec{y}|h, \vec{X}) 
+& = \arg\min_{h} \left( -K \ln p(\vec{y}|h, \vec{X}) \right)
+= \arg\min_{h} \sum_e \left( -K \ln p(y_e|h, \vec{x}_e) \right)\\
+& = \arg\min_{h} \sum_e\left( -K \ln \left(\sum_{\vec{z} \in \curly{Z}} p(y_e|\vec{z},h)
+p(\vec{z}| \vec{x}_e) \right) \right) \\
+& = \arg\min_{h} \sum_e\left( -K \ln \left(\expct_{\vec{z} \sim p(\vec{z}| \vec{x}_e)}[p(y_e|\vec{z},h)] \right) \right) \\
+\end{align}
+
+We take advantage of Jensen's inequality and as a surrogate instead attempt to minimise:
+\begin{align}
+\arg\min_{h} \sum_e \left( -K \expct_{\vec{z} \sim p(\vec{z}| \vec{x}_e)}[\ln  p(y_e|\vec{z},h)] \right)
+& \approx
+\arg\min_{h} \sum_e \sum_{i=1}^I  \left(-\frac{K}{I}  \ln  [p(y_e|\vec{z}_{ei},h)] \right)
+\tag{approx. implied by Jensen's} \\
+& \approx
+\arg\min_{h} \sum_e \sum_{h,\vec{x}_{ei}\not\models y_e}  \left(-\frac{K}{I} \ln  \epsilon \right)
+\tag{noisy labels}\\
+& \approx
+\arg\min_{h} \sum_e \sum_{h,\vec{x}_{ei}\not\models y_e}  \text{round}\left(-\frac{K}{I} \ln  \epsilon \right)
+\tag{rounding}
+\end{align}
+
+This approach means that we can assign a non-coverage penalty of $\text{round}\left(-\frac{K}{I} \ln  \epsilon \right)$ to every sampled grounded example for every probabilistic example.
+
+
+#%% md
+
+### Prior over hypothesis space
+
+Now, we can extend the above approach by considering a prior over the hypothesis space too, say $p(h)$. This gives a plausibility value to each potential $h$ before we evaluate its fitness on the examples. We can combine this with the likelihood function to give a posterior probability for the data and hypothesis, namely:
+\begin{align}
+p(\vec{y}, h|\vec{X})
+& = p(\vec{y}|h, \vec{X})p(h)
+\end{align}
+
+Again we can log this to give:
+\begin{align}
+\ln p(\vec{y}, h|\vec{X})
+& = \ln p(\vec{y}|h, \vec{X}) + \ln p(h)
+\end{align}
+
+And now maximising the above equation leads to what we would call the maximum posterior, or maximum a posteriori (MAP),  estimate for $h$, namely
+\begin{align}
+\map{h}
+& = \arg\max_{h} \ln p(\vec{y}|h, \vec{X}) + \ln p(h) 
+\end{align}
+
+As with the maximum likelihood approach we can maximise the rescaled expression using $K \in \reals^+$ giving:
+\begin{align}
+\map{h}
+& = \arg\max_{h} \left(K\ln p(\vec{y}|h, \vec{X}) + K\ln p(h) \right)
+\end{align}
+
+Or we can see this as minimising a negative log-loss:
+\begin{align}
+\map{h}
+& = \arg\min_{h} \left(-K\ln p(\vec{y}|h, \vec{X}) - K\ln p(h) \right)
+\end{align}
+
+Note the important point here is that as you scale the penalties on the examples you must also scale the penalties on the prior.
+
+### Meaningful prior on hypothesis space
+
+There are a number of ways to place a prior on hypothesis space. One simple way is to start with a set of potential clauses $\curly{C}$ and say that for every potential clause $c \in \curly{C}$ it is included in $h$ (written $c \in h$) with independent probability $q_c$. Then we can write the prior on $h$ as:
+\begin{align}
+p(h) = \left(\prod_{c \in h} q_c\right)\left(\prod_{c \in \curly{C}\setminus h} (1-q_c)\right)
+\end{align}
+
+We can log this for convenience
+\begin{align}
+\ln p(h) = \sum_{c \in h} \ln q_c + \sum_{c \in \curly{C}\setminus h} \ln(1-q_c)
+\end{align}
+
+Now, consider two hypotheses $h, h' \in \curly{H}$ which differ only by one clause $c^*\in\curly{C}$, where $c^* \in h$ but $c^* \not\in h'$. The change in log probability by choosing $h$ rather than $h'$ is given by the log of the ratio:
+\begin{align}
+\ln \left(\frac{p(h)}{p(h')}\right) 
+& = \sum_{c \in h} \ln q_c + \sum_{c \in \curly{C}\setminus h} \ln(1-q_c)
+- \sum_{c \in h'} \ln q_c - \sum_{c \in \curly{C}\setminus h'} \ln(1-q_c) \\
+& = \ln q_{c^*} 
+- \ln(1-q_{c^*}) \\
+\end{align}
+
+### Quantifying the prior
+
+Imagine that we have a clause of type $i$ (perhaps relating to the length of the clause), we would expect to find $r_i$ clauses of type $i$ in a typical hypothesis, and there are $n_i$ clauses of type $i$ in the set of possible clauses $\curly{C}$. Then this suggests a value for $q_{c_i} = \frac{r_i}{n_i}$. This means that our change in prior for the inclusion of an individual of type clause of type $i$ would be:
+\begin{align}
+\ln q_{c_i} 
+- \ln(1-q_{c_i})
+& = \ln \frac{r_i}{n_i} 
+- \ln(\frac{n_i - r_i}{n_i}) \\
+& = \ln \frac{r_i}{n_i} 
+- \ln\left(\frac{n_i - r_i}{n_i}\right) \\
+& = \ln r_i - \ln n_i 
+- \ln(n_i - r_i) + \ln n_i = \ln r_i - \ln(n_i - r_i)
+\end{align}
+
+The overall change in prior from the empty hypothesis $h_0 = \emptyset$ to any hypothesis $h$ can then be calculated as a sum over the individual changes above (one per clause $c \in h$. For a fixed reference hypothesis such as $h_0$, maximising the posterior is equivalent to maximising the posterior divided by the prior for $h_0$ namely:
+\begin{align}
+\map{h}
+& = \arg\max_{h} p(\vec{y}|h, \vec{X}) p(h)  \\
+& = \arg\max_{h} \left(\frac{ p(\vec{y}|h, \vec{X}) p(h)}{p(h_0)}\right)  \\
+& = \arg\min_{h} \left( -K\ln p(\vec{y}|h, \vec{X}) - K \ln \frac{p(h)}{p(h_0)}\right)  \\
+\end{align}
+
+And for our special reference policy, we can simplify the change in prior to:
+\begin{align}
+\ln \left(\frac{p(h)}{p(h')}\right) 
+& = \sum_{c \in h} \ln q_c + \sum_{c \in \curly{C}\setminus h} \ln(1-q_c)
+- \sum_{c \in \emptyset} \ln q_c - \sum_{c \in \curly{C}} \ln(1-q_c) \\
+& = \sum_{c \in h} \left(\ln q_c - \ln(1-q_c) \right)
+\end{align}
+
+
+By inspection we see, that our per clause penalty must be $-K$ times the value two equations up. So the suggested penalty for each individual clause of type i would be
+\begin{align}
+-K\left(\ln q_{c_i} 
+-\ln(1-q_{c_i}) \right)
+& =  K \ln(n_i - r_i) - K \ln r_i
+\end{align}
+
+#%%
+
+
+
