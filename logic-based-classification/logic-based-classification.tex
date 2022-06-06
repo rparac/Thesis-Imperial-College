@@ -187,8 +187,8 @@ p(\vec{y}, H|\vec{X})
 
 We can log this to get:
 \begin{align}
-\ln p(\vec{y}, h|\vec{X})
-& = \ln p(\vec{y}|h, \vec{X}) + \ln p(h)
+\ln p(\vec{y}, H|\vec{X})
+& = \ln p(\vec{y}|H, \vec{X}) + \ln p(H)
 \end{align}
 
 Maximising the above equation leads to what we would call the maximum posterior estimate for $H$, or maximum a posteriori (MAP) estimate:
@@ -258,7 +258,7 @@ By inspection, we see that the decomposition of the function $\curly{S}$ is give
 
 
 Finally, we need to choose appropriate values probabilities $q_c$. \\
-Imagine that we have a clause of length $l$, we would expect to find $m_l$ clauses of length $l$ in a specific hypothesis, and there are $n_l$ clauses of length $l$ in the set of all possible rules $\curly{R}$. 
+Imagine that we have a rule of length $l$, we would expect to find $m_l$ clauses of length $l$ in a specific hypothesis, and there are $n_l$ clauses of length $l$ in the set of all possible rules $\curly{R}$. 
 This setup suggests a value for $q_{r_l} = \frac{m_l}{n_l}$, resulting in the following change to the $\curly{S}^{rule}$:
 \begin{align}
 \curly{S}^{rule}(r, T) 
@@ -266,3 +266,87 @@ This setup suggests a value for $q_{r_l} = \frac{m_l}{n_l}$, resulting in the fo
 & = -K \left (\ln \frac{m_l}{n_l} - \ln \frac{n_l - m_l}{n_l} \right) \nonumber \\
 & = K \left (\ln (n_l - m_l) - \ln m_l  \right)
 \end{align}
+
+\section{Implementation}
+
+\subsection{Encoding Binary Classification Task}
+
+In order to encode a solution to a binary classification problem using ASP, we can do the following:
+\begin{itemize}
+    \item Write rules such as \verb+label1 :- ...+  for one of the labels.
+    \item Add the rule of the form \verb+label2 :- not label1+.
+\end{itemize}
+With this approach, we are guaranteed to have exactly one label in each answer set of the task.
+We often want exactly one answer set as a solution, as usually no reason to prefer one over the other in a classification task.
+To prevent that possibility from occurring, the following types of ASP rules are not used:
+\begin{itemize}
+    \item Choice rules --- Choice rules give rise to multiple answer sets, which we do not want.
+    \item "Not chain" --- Combination of normal rules which can only be satisfied by multiple answer sets, such as \verb+{p :- not q. q :- not p.}+.
+    \item Constraints --- Constraints are used to eliminate an answer from occurring.
+\end{itemize}
+
+An alternative to this encoding which would return a solution with a highest score is also possible, however, it is not nearly as interpretable.
+
+\begin{example}
+Encoding the sudoku learning task:
+
+% INSERT reference evaluation
+The sudoku 4x4 learning task (X) should deduce whether a grid or is not valid.
+
+1. \textit{Construct the background knowledge:} \\
+The background knowledge for sudoku could contain the following rules that specify which row/column/block does a cell belong to.
+\begin{verbatim}
+num(1..4).
+col(1..4).
+row(1..4).
+block(1..4).
+% value(C, N) represents that number N is written in cell C
+cell(C) :- value(C, _).
+
+col((X, Y), Y) :- row(X), col(Y).
+row((X, Y), X) :- row(X), col(Y).
+block((X, Y), 1) :- row(X), col(Y), X <= 2, Y <= 2.
+block((X, Y), 2) :- row(X), col(Y), X <= 2, Y > 2.
+block((X, Y), 3) :- row(X), col(Y), X > 2, Y <= 2.
+block((X, Y), 4) :- row(X), col(Y), X > 2, Y > 2.
+
+neq_cell(C1, C2) :- cell(C1), cell(C2), C1 != C2.
+\end{verbatim}
+
+2. \textit{Construct the language bias:} \\
+We chose that we wish to learn what makes a cell invalid in this example, resulting in the following language bias:
+\begin{verbatim}
+#modeh(selected(invalid)).
+
+#modeb(row(var(cell), var(row))).
+#modeb(col(var(cell), var(col))).
+#modeb(block(var(cell), var(block))).
+#modeb(neq_cell(var(cell), var(cell))).
+#modeb(value(var(cell), var(num))).
+
+#maxv(4).
+\end{verbatim}
+
+3. \textit{Account for the alternative label:} \\
+We add the following rule to the background knowledge:
+\begin{verbatim}
+selected(valid) :- not selected(invalid). 
+\end{verbatim}
+
+4. \textit{Add examples and prior penalty definitions:}
+% INSERT refernce to example definition and prior penalty definition
+This step will be discussed in X and X.
+\end{example}
+
+\subsection{Encoding Multi-label Classification Task}
+
+
+To aid intpretability, multi-label classification outcome is decided using the flowchart in X.
+\subsection{Encoding Examples}
+
+\subsection{Encoding Prior Penalties}
+
+\subsubsection{Search Space Counting}
+TODO: Finish Implementation
+
+\subsection{Example Aggregation}
