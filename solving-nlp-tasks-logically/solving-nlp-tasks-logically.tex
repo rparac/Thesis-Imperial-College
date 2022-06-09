@@ -5,7 +5,10 @@
 % Add a box plot somewhere
 
 
+% TODO: Alessandra feedback: use running examples because it's easier to understand that way
+% TODO: Alessandra feedback: do comparison with semantic entailment if it is
 \chapter{Solving NLP Tasks Logically}
+\label{solving-nlp-tasks-logically}
 
 
 Logical representations have an important place in the Natural Language Processing field.
@@ -34,13 +37,21 @@ In this chapter, the following topics are presented:
 
 
 
+% TODO: Alessandra feedback: add more introduction, namely the drawing in alessandra-feedback-diagram - one box is for the atomiser (symbolic atomisation transformer), another one for generalisation - they work on sentences to sentences
+% TODO: Alessandra feedback: go into how both atomisation and generalisation works briefly
+% TODO: Alessandra feedback: add more introduction, namely the drawing in alessandra-feedback-diagram
+
+% From what I understood Ale's feedback is decided on the Nuri's paper - if there is time look into his papers for inspiration
+ 
 \section{Sequence2Sequence Tasks}
 
 The two tasks that have been tackled using logic based learning approach are \textbf{sentence} \textbf{atomisation} and \textbf{generalisation}.
 
 The former converts a declarative sentence into one or more \textbf{atomic sentences}, while the latter converts an \textbf{atomic sentence} into one or more \textbf{concept sentences}.
 
+% TODO: Alessandra feedback: no need for a subsection. Merge with the previous one
 \subsection{Sentence Type Definitions}
+\label{sentence-type-definitions}
 
 \textbf{Atomic Sentence:} A sentence that cannot be decomposed into multiple valid sentences. \\
 % TODO add reference %
@@ -52,11 +63,13 @@ An \textbf{atomic sentence} should only contain simple predicates, eliminating c
 
 \textbf{Concept Sentence:} A syntactic generalisation of an atomic sentence, which satisfies the following three conditions:
 \begin{enumerate}
+% TODO: Alessandra feedback: valid -> syntactically well-formed -> give examples for what it means for a sentence to be syntactically well-formed
     \item It is a valid sentence in its own right.
     \item True if the atomic sentence is.
     \item Obtained only through syntactic manipulation of an atomic sentence, a result of modifying the syntax tree of the sentence.
 \end{enumerate}
 
+% TODO: Alessandra feedback: argue that concept sentence is any syntactically well formed substring of an atomic sentence.
 Concept sentences are sometimes referred to as \textbf{(syntactic) generalisations} of a sentence in this report.
 
 
@@ -78,13 +91,15 @@ The batter made contact with the ball in the air.
 The batter made contact with the ball.
 The batter sent it into the left field.
 The batter sent it into the field.
+The batter sent it.
 \end{verbatim}
 
 \end{example}
 
+% TODO: Alessandra feedback: no need for a subsection. Merge with the previous one
 \subsection{Purpose of the Tasks}
 
-The two tasks mentioned are a part of the Concept Bottleneck pipeline discussed in greater detail in Chapter \ref{combining-everything-together}.
+The two tasks mentioned are a part of the Concept Bottleneck pipeline discussed in greater detail in Chapter \ref{concept-bottleneck-pipeline}
 These two tasks are used in sequence as a replacement for the extraction part of the original CoDEx (Concept Discovery and Extraction) pipeline \ref{inherited-work}.
 
 The reason the project aims to extract all concept sentences from a particular sentence is two-fold:
@@ -93,7 +108,11 @@ The reason the project aims to extract all concept sentences from a particular s
     \item The final generated sentences are immediately usable for explanations.
 \end{enumerate}
 
+% TODO: Alessandra feedback: add part 2 of the diagram from the introduction but now show the syntactic parse trees to showcase what we are doing in this part
+% TODO: Alessandra feedback: talk about the definition of the learning task associated with the background.
+% TODO: Alessandra feedback: make background/language_bias \paragraph or something similar so that they don't appear in the table of contents
 \section{Solving Concept Generalisation}
+\label{solving-generalisation-task}
 
 \subsection{Logical Encoding}
 \label{logical-encoding}
@@ -237,6 +256,9 @@ Because of this property, the Inductive Logic Programming paradigm can incorpora
 
 The following subsection demonstrates how the \textbf{generalisation} task has been solved with ILASP \cite{RefWorks:RefID:18-law2020ilasp}, a state-of-the-art ILP system.
 
+% TODO: Alessandra feedback: describe a problem with learner first before going into a hand-crafted solution (after learning)
+% Argue that a hand-crafted solution should be something a human engineered ground truth model
+
 \subsubsection{Background Knowledge Construction}
 
 Here is the background knowledge used for the \textbf{generalisation} task.
@@ -258,6 +280,7 @@ The hand-crafted solution helps find the structure logical structure the learner
 ILASP should then be able to find a better solution within those constraints.
 
 
+% TODO: Alessandra feedback: Justify a 0 1 boundary
 The problem is modelled as a choice of whether a particular token (word) should always be included or sometimes be included in the solution, which the following types of rules can represent.
 \begin{verbatim}
 in_generalised_sent(T) :- ...
@@ -285,6 +308,8 @@ This gives rise to the following language bias:
 
 \end{verbatim}
 
+% TODO: Alessandra feedback: what would happen if we only had #pos examples.
+% TODO: Alessandra feedback: Argue that the size is because of the number of constants that we have. 
 \subsubsection{Example Encoding}
 \label{example-encoding}
 
@@ -345,6 +370,7 @@ goal :- in_generalised_sent(tok0), in_generalised_sent(tok1),
 All of the examples constructed have a \verb+noise_penalty=1+ as the \textbf{concept generalisation} examples may be noisy.
 
 
+% TODO: Alessandra feedback: scaling up should be a separate section
 \subsection{Managing Learning Scalability Constraints}
 
 % INSERT reference for this. %
@@ -439,6 +465,7 @@ These modifications allowed the search space generation times to take less than 
 The final search space consisted of only 3652 rules.
 
 
+% TODO: Alessandra feedback: avoid using OOM acrynoym - replace with out-of-memory/lack of memory
 \subsubsection{Avoiding OOM Errors}
 \label{avoiding-oom-errors}
 
@@ -467,7 +494,14 @@ In addition, all ILASP tasks were run with the \verb+--restarts+ flag, which can
 % INSERT reference to evaluation part of this section
 The results of the performance of the \textbf{generalisation} task can be found in \ref{concept-generalisation-results}.
 
+
+% TODO: Alessandra feedback: argue that atomistaion is a 3-step process - generate logical form + apply rules + reconstruct the data
+% TODO: Alessandra feedback: add diagram with dependency trees - alessandra feedback-diagrams.png has a sketch
+
+% TODO: Alessandra feedback: add part 1 of the diagram from the introduction but now show the syntactic parse trees to showcase what we are doing in this part
+% TODO: Alessandra feedback: argue why the atomisation task is harder than the generalisation
 \section{Solving Atomisation Task}
+\label{solving-atomisation-task}
 
 The solution to the atomisation task has only been hand-crafted rather than learned.
 This section will highlight the idea behind the hand-crafted solution and demonstrate that ILASP is currently not scalable enough to learn a solution that is at least as good as the hand-crafted one.
@@ -480,6 +514,8 @@ Due to the domain similarity of the two tasks, almost the entire Logical Encodin
     \item Encoding the Learning Target (\ref{encoding-the-example-target}) --- The goal for the \textbf{atomisation} task is denoted with \verb+in_atomised_sent+.
 \end{itemize}
 
+% TODO: Alessandra feedback: summarise the rules in English first before encoding them symbolically
+% TODO: Alessandra feedback: include a table with two columns (predicate name, description) before which highlight what each of the predicates mean (so candidate_start is ...)
 \subsection{Hand-crafting the Atomisation Solution}
 \label{hand-crafting-the-atomisation-solution}
 
@@ -490,6 +526,8 @@ the batter swung and the ball landed
 the batter swung and missed 
   $\rightarrow$ the batter swung. the batter missed.
 \end{lstlisting}
+
+% TODO Alessandra feedback: argued that there can only be one root in a dependency parse tree.
 
 \begin{figure}[h]
 \caption{Dependency graph of two sentences which need to be atomised}
@@ -611,6 +649,11 @@ The language bias additionally included a more aggressive alternative to the sea
 In addition, the examples were constructed in the same manner as in \ref{example-encoding}.
 The learning was done on a specialised machine with 500 GiB of RAM, but it still required that an approximate solution be returned after some time (\ref{avoiding-oom-errors}).
 
+% TODO: Alessandra feedback: replace prior with size in the graph legend
+% TODO: Alessandra feedback: suggest that ... is the lower bound to solve the task. In addition suggest that if that lower bound was achieved the performance would be at least as good as the ... blue line
+% TODO: Alessandra feedback: suggest that the green line is the maximum size the ILASP hypothesis can have
+% TODO: Alessandra feedback: talk about ILASP score in background, reference in graph
+
 \begin{figure}[h]
 \caption{Comparison of the ILASP atomisation solution performance and memory consumption over time. The maximum prior penalty quantifies the maximum number of predicates ILASP can use in a solution. On the other hand, the example penalty outlines how many examples are not covered by the current solution. The dashed lines represent the values the hand-crafted solution would achieve had it been learned by ILASP.}
 \centering
@@ -633,6 +676,11 @@ This section presents the implementation design for the learning task and the de
 
 \subsection{Atomisation/generalisation procedure}
 
+% TODO: Alessandra feedback: Cut-up this diagram in two one for learning time and one for inference time. With this approach we can replace it to the appropriate report sections.
+% TODO: Alessandra feedback: Use ASP Encoder instead of ASP Generator
+% TODO: Alessandra feedback: Use Answer Set (Generalised Concept) instead of just Answer Set
+
+
 \begin{figure}[h]
 \caption{Simplified architecture for the concept generalisation part of the CoDEx pipeline.} 
 \centering
@@ -647,6 +695,9 @@ The atomisation task uses an almost identical architecture as the \textbf{applic
 The goal of the \textbf{learning} stage is to learn the hypothesis $H$, which will be able to generalise/atomise any sentence correctly.
 Each training example for the learning stage consists of the premise and generalisation sentences provided in CSV format.
 The raw examples are written in the following way:
+
+% TODO: Alessandra feedback: This would need to go to either generalisation or atomisation to get the idea of what the data is like.
+
 \begin{center}
 \setlength\parskip{0pt}
 \includegraphics[width=.8\linewidth]{solving-nlp-tasks-logically/raw-generalisation-example.png}
@@ -756,6 +807,9 @@ Finally, \textbf{PyFakeFS}, a library which mocks the file system, was used for 
 
 \subsection{Metrics}
 
+
+% TODO: Alessandra feedback: talk about metrics such as Jaccard@5, Jaccard@0.1 where the former allows Levensthein distance to be <= 5 for the result to be correct and the latter allows Edit distance to be <= 0.1 length
+
 Both atomisation and generalisation problems had a set of solutions of unknown size.
 A needed metric would give a higher score if two sets are very similar compared to those far apart.
 
@@ -788,6 +842,7 @@ These two metrics help better understand the type of errors the model is making.
 % The same notational trick is used for $Recall\text{-}k$ and $Precision\text{-}k$.
 % 
 
+% TODO: Alessandra feedback: Show a learned H because it is interpretable (might want to do some analysis there)
 \subsection{Concept Generalisation}
 \label{concept-generalisation-results}
 
@@ -896,6 +951,10 @@ The results averages and standard errors are presented in the tables below:
  \hline
 \end{tabular}
 \end{center}
+
+% TODO: Alessandra feedback: Ale suggested the name empty H, but it may not be completely correct.
+% TODO: Alessandra feedback: Discuss number more, what does 0.09 mean essentially
+% TODO: Alessandra feedback: Include snippet of the data that have certain characteristics, for example when elaborating on what doesn't work 
 
 \begin{center}
 \begin{tabular}{ |M{3cm}||M{3cm}|M{3cm}|M{3cm}|  }

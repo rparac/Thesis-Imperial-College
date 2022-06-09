@@ -1,5 +1,10 @@
 \chapter{Logic-Based Classification}
 
+% TODO: Alessandra feeedback
+% Concept extraction can be used for a classification problem - that problem uses attention on the concepts to determine which ones are more active
+% A more interpretable approach would involve rule-based classification, which we explore in this section
+% Furthermore, despite the concept extraction from text presented, concepts can really be any features which is accounted for in this chapter.
+
 This chapter presents a  classification method using an ILP system, which has an advantage over neural network classification methods because of its interpretability.
 % TODO: Insert next chapter
 The method works with probabilistic facts, allowing it to be incorporated into a complex NN pipeline, such as the one presented in the chapter.
@@ -11,6 +16,7 @@ However, we aim to use those penalties to find the most likely solution.
 
 
 \section{Choosing FastLAS Parameter Values}
+\label{choosing-fastlas-parameter-values}
 
 % INSERT reference to background section decomposable
 FastLAS can find an optimal solution with respect to a scoring function of kind ($\curly{S} + \curly{S}_{pen}$), where $\curly{S}$ is a decomposable scoring function (X) and $\curly{S}_{pen}$ is a sum of all uncovered example penalties.
@@ -269,13 +275,17 @@ This setup suggests a value for $q_{r_l} = \frac{m_l}{n_l}$, resulting in the fo
 
 \section{Implementation}
 
+% TODO: merge binary classification and multi-label classification into one subsection
 \subsection{Encoding Binary Classification Task}
+\label{encoding-binary-classification-task}
 
 In order to encode a solution to a binary classification problem using ASP, we can do the following:
 \begin{itemize}
     \item Write rules such as \verb+label1 :- ...+  for one of the labels.
     \item Add the rule of the form \verb+label2 :- not label1+.
 \end{itemize}
+
+% TODO: remove the itemise and encode is as a piece of text
 With this approach, we are guaranteed to have exactly one label in each answer set of the task.
 We often want exactly one answer set as a solution, as usually no reason to prefer one over the other in a classification task.
 To prevent that possibility from occurring, the following types of ASP rules are not used:
@@ -288,6 +298,7 @@ To prevent that possibility from occurring, the following types of ASP rules are
 An alternative to this encoding which would return a solution with a highest score is also possible, however, it is not nearly as interpretable.
 
 \begin{example}
+\label{sudoku-binary-example}
 Encoding the sudoku learning task:
 
 % INSERT reference evaluation
@@ -313,7 +324,13 @@ block((X, Y), 4) :- row(X), col(Y), X > 2, Y > 2.
 neq_cell(C1, C2) :- cell(C1), cell(C2), C1 != C2.
 \end{verbatim}
 
-2. \textit{Construct the language bias:} \\
+2. \textit{Account for the alternative label:} \\
+We add the following rule to the background knowledge:
+\begin{verbatim}
+selected(valid) :- not selected(invalid). 
+\end{verbatim}
+
+3. \textit{Construct the language bias:} \\
 We chose that we wish to learn what makes a cell invalid in this example, resulting in the following language bias:
 \begin{verbatim}
 #modeh(selected(invalid)).
@@ -327,12 +344,6 @@ We chose that we wish to learn what makes a cell invalid in this example, result
 #maxv(4).
 \end{verbatim}
 
-3. \textit{Account for the alternative label:} \\
-We add the following rule to the background knowledge:
-\begin{verbatim}
-selected(valid) :- not selected(invalid). 
-\end{verbatim}
-
 4. \textit{Add examples and prior penalty definitions:}
 % INSERT refernce to example definition and prior penalty definition
 This step will be discussed in X and X.
@@ -340,13 +351,173 @@ This step will be discussed in X and X.
 
 \subsection{Encoding Multi-label Classification Task}
 
+The multi-label classification outcome is decided using the flowchart in \ref{flowchart-multi-label-classification}, where the \verb_conds(label(x))_ predicate that is true when conditions for a particular label are satisfied.
 
-To aid intpretability, multi-label classification outcome is decided using the flowchart in X.
-\subsection{Encoding Examples}
+\begin{figure}[h]
+\caption{A flowchart to select an outcome of a multi-label classification problem.}
+\vspace{10pt}
+\centering
+\includegraphics[width=\textwidth]{logic-based-classification/multi-label-selection.png}
+\label{flowchart-multi-label-classification}
+\end{figure}
 
-\subsection{Encoding Prior Penalties}
+The choice for the flowchart was made to aid interpretability because FastLAS learns the following set of rules:
+\begin{verbatim}
+conds(label(1)) :- ...
+conds(label(1)) :- ...
+...
+conds(label(n-1)) :- ...
+conds(label(n-1)) :- ...
+\end{verbatim}
+So, a human can easily determine the outcome by going through the rules from top to bottom and selecting a label matching the first satisfied rule.
+Learning these types of rules is encoded in FastLAS with the following syntax:
+\begin{verbatim}
+#modeh(conds(const(learnable_label))).
 
-\subsubsection{Search Space Counting}
-TODO: Finish Implementation
+... all the modeb declarations ...
+
+% Avoid constraints
+#bias("
+:- constraint.
+").
+\end{verbatim}
+
+Furthermore, to make the learner use the logic presented in the flowchart, we need to encode the following: 
+\begin{enumerate}
+    \item The position of a label in the flowchart chain.
+    \item Selection the highest priority label whose conditions are satisfied.
+    \item Selection of the lowest priority label when no conditions are satisfied.
+\end{enumerate}
+The enumerated criteria results in the following ASP encoding added to the background of a learning task:
+\begin{lstlisting}
+% Encoding 1 with label(name, position) (lower=better)
+label(l1, 0).
+label(l2, 1).
+...
+label(ln, n-1).
+
+% Definitions of types for FastLAS
+label(L) :- label(L, _).
+learnable_label(L) :- exists_lower_priority(L, _).
+
+
+% Encoding 2: Select the highest priority label whose conditions are satisfied
+selected(L) :- label(L, P), conds(L), 
+                 not higher_priority_selection(L, P).
+higher_priority_selection(L, P) :- label(L, P), label(L2, P2), 
+                                       P2 < P, selected(L2).
+
+% Encoding 3: Select default label if no higher priority selection is made
+selected(L) :- label(L, P), not higher_priority_selection(L, P), 
+                 not exists_lower_priority(L, P).
+exists_lower_priority(L, P) :- label(L, P), label(L2, P2), P2 > P.
+\end{lstlisting}
+
+Notice that the presented encoding also produces exactly one answer set, same as the encoding for the binary classification.
+
+\begin{example}
+Encoding the multi-label sudoku 4x4 learning task:
+
+% INSERT reference evaluation
+Consider an extension of the binary sudoku 4x4 task in example \ref{sudoku-binary-example}, which introduces an additional label \verb_conflict_. 
+That label should be true only when an example contains two digit written in the same cell.
+The following steps are needed to solve the task using the presented multi-label classification encoding:
+
+1. \textit{Construct the background knowledge:} \\
+The background is the same as for example \ref{sudoku-binary-example}.
+
+2. \textit{Add the multi-label selection encoding to the background:} \\
+We add the following rules to the background knowledge:
+\begin{lstlisting}
+% Encoding 1 with label(name, position) (lower=better)
+label(conflict, 0).
+label(invalid, 1).
+label(valid, 2).
+
+% Definitions of types for FastLAS
+label(L) :- label(L, _).
+learnable_label(L) :- exists_lower_priority(L, _).
+
+
+% Encoding 2: Select the highest priority label whose conditions are satisfied
+selected(L) :- label(L, P), conds(L), 
+                 not higher_priority_selection(L, P).
+higher_priority_selection(L, P) :- label(L, P), label(L2, P2), 
+                                       P2 < P, selected(L2).
+
+% Encoding 3: Select default label if no higher priority selection is made
+selected(L) :- label(L, P), not higher_priority_selection(L, P), 
+                 not exists_lower_priority(L, P).
+exists_lower_priority(L, P) :- label(L, P), label(L2, P2), P2 > P.
+\end{lstlisting}
+
+2. \textit{Construct the language bias:} \\
+We chose that we wish to learn what makes a cell invalid in this example, resulting in the following language bias:
+\begin{verbatim}
+#modeh(conds(const(learnable_label))).
+
+#modeb(row(var(cell), var(row))).
+#modeb(col(var(cell), var(col))).
+#modeb(block(var(cell), var(block))).
+#modeb(neq_cell(var(cell), var(cell))).
+#modeb(value(var(cell), var(num))).
+
+#maxv(4).
+\end{verbatim}
+
+4. \textit{Add examples and prior penalty definitions:}
+% INSERT refernce to example definition and prior penalty definition
+This step will be discussed in X and X.
+\end{example}
+
+
+\subsection{Creating the Example File}
+
+The example file incorporates all of the theory presented in \ref{choosing-fastlas-parameter-values}.
+% TODO: insert background example and write task name
+Recall from X that the ILP-X task allow positive and negative examples.
+Positive examples are bravely entailed, i.e. the final solution should be extended by at least one answer set.
+On the other hand, the negative examples are cautiously entailed, so the final solution must not be extended by any answer set.
+Because of our classification encodings, the learned hypothesis can only ever return one answer set, making the positive examples sufficient to encode any task.
+
+To account for FastLAS's inability to deal with probabilistic atoms, we need to sample $I$ examples, each of the form:
+\begin{lstlisting}
+#pos(example_id@$\text{round} \left ( -\frac{K}{I} \ln \left ( \frac{\epsilon}{1 - \epsilon} \right ) \right )$,
+{selected(true_label)},
+{selected(incorrect_label) for each incorrect_label}, 
+{... context atoms derived from the raw example ...}
+\end{lstlisting}
+
+The values for the constants $K, I,$ and $\epsilon$ are currently set to $1000, 100$ and $0.01$, respectively.
+
+We further need to encode the prior (hypothesis) penalties.
+% INSERT reference decomposable %
+Any custom defined FastLAS scoring must be decomposable, and we can only directly input the scoring function decomposition as FastLAS code.
+Recall that the scoring function decomposition we wish to encode is given by $\curly{S}^{rule}(r, T) = K \left (\ln (n_l - m_l) - \ln m_l  \right)$.  \\
+% INSERT reference scoring function background which should include the simplest example.
+As mentioned in X, defining a scoring function decomposition is done by defining the predicate \verb_penalty/2_. Any logic related to \verb_penalty/2_ is defined with atoms \verb+in_head/1+ and \verb+in_body/1+ which contain all the head and body predicates of a rule $r$.
+Using FastLAS's ASP syntax, we define the \verb_penalty_ predicate by looking up the penalty value for a rule of a certain length, or assign an extremely large value for undefined length-penalty pairs:
+\begin{lstlisting}
+#bias("
+penalty(P, custom) :- L = #count{X : in_head(X); X : in_body(X)}, 
+                         pen(L, P).
+pen(1, $K \ln (n_1 - m_1) - K \ln m_1$).
+pen(2, $K \ln (n_2 - m_2) - K \ln m_2$).
+... other similarly defined penalties ...
+pen(L, 100000000000) :- L = #count{X : in_head(X); X : in_body(X)}, 
+                           L >= threshold.
+").
+\end{lstlisting}
+
+
+A simple, yet extremely beneficial, implemented optimisation is \textbf{example aggregation}. \\
+When sampling $I$ values, track each outcome and the its number of occurrences before generating the actual examples.
+The tracking allows to replace $C$ identical examples of penalty $\text{round} \left ( -\frac{K}{I} \ln \left ( \frac{\epsilon}{1 - \epsilon} \right ) \right )$ with only one example of penalty $C * \text{round} \left ( -\frac{K}{I} \ln \left ( \frac{\epsilon}{1 - \epsilon} \right ) \right )$, reducing the overall FastLAS running time.
+
+% TODO: Example for binary sudoku with this one
+
+% \subsubsection{Search Space Counting}
+% TODO: Finish Implementation
 
 \subsection{Example Aggregation}
+
