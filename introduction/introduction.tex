@@ -1,150 +1,178 @@
-\chapter{Introduction}
- - text classification (from explanations)
-
-The atomistion/generalistaion pipeline
-
- - atomisation issues
-    - the algorithm
-      - 
-    - the learning issues with ILASP
-    - evaluation of the performance (the entire dataset we have )
-    - evaluation of the performance (the entire dataset we have birds)
-    
-  - generalisation 
-    - evalution
-      - in domain evalution - extract the poitns
-      - out of domain evalution - birds dataset
-      
-Learning with probabilistic examples 
-  - comparison with Dan's work
-  - bring to the first dataset  - manually noisy examples
-        - learning causal relationship between concepts and labels
-        
-  - accuracy of the learned solutions
-  - explanibility of the solution
-  
-  - evaluate with birds 
 
 
-How do we apply this?
- - multi-modal data
- - compare with benchmark (Vikranths)
-    - MI stuff -> hopefully improved accuracy - sequntial training () - 2x, fully differentiable, with learning probabilistic examples
-       -> issue - concept prediction with joint training (end-to-end)
-       -> from ground truth -> predictions (with)
-       
-  - other dataset (if time)
-  
-      
+% Talk about the idea of concept bottleneck
+% mulit-modal data fusion for classification
 
 
-Natural language can be used as metadata for any sort of data.
-To make it machine-readable and valuable for a task at hand, one needs to extract relevant pieces of information about it consistently.
-If done successfully, given natural language explanations could even be used to explain unseen classification examples or improve the video classification performance.
-In this project, a method for the automatic extraction of valuable information from language is studied as part of a bottleneck-based video classification pipeline.
+% Need to mention rule learning from concepts to labels
 
-
-
-
-
-\section{Problem Setup}
-
-The project aims to design a general method for extracting valuable information from natural language.
-The initial attempt at designing such a method intends to tackle a specific problem well before expanding its domain.
-The problem this work is helping to solve is the problem of the classification of short baseball video sequences.
-% TODO fix
-In particular, it targets the MLB-V2E dataset  \cite{RefWorks:RefID:16-2021automatic}.
-This dataset consists of the following:
-
- - A short video of a baseball sequence (\href{www.mlb.com}{MLB} (Major League Baseball) clips).
- 
- - Label describing the outcome which occurred in it: strike, foul, ball, none, out.
-
- - Crowd-sourced brief explanation of why the outcome occurred.
- 
- 
-\begin{center}
-\begin{tabular}{ |p{1.5cm}|p{1.5cm}|p{9cm}|p{1.7cm}|  }
- \hline
- \multicolumn{4}{|c|}{Extract from MLB-V2E dataset} \\
- \hline
- id, $n$ & label, $l_n$ & explanation, $e_n$& video, $v_n$\\
- \hline
- 1 & strike & The batter did not swing. The ball was in the strike zone. & N/A \\
- 2 & foul & the batter hit the ball into the stands and it landed in foul territory & N/A \\
- 3 & ball & The hitter didn’t swing. The ball was outside the strike zone. & N/A \\
- 4 & none & The video did not load. & N/A \\
- 5 & out & the batter hit the ball and it was caught by the fielder & N/A \\
- 
- \hline
-\end{tabular}
-\end{center}
-
-
-% TODO insert reference to the classifier %
-Additionally, the problem is explored within the context of a concept bottleneck classifier. 
-In that context, \textbf{concepts} are defined as syntactic generalisations of atomic sentences. 
-Moreover, an \textbf{atomic sentence} is a sentence that an NLP expert cannot decompose into multiple sentences.
-The system designed in this project should be general-purpose; changing the dataset on which the concept bottleneck classifier operates should immediately produce relevant concept sentences for a different dataset.
-
-As such, this project aims to propose a novel method, combining techniques from natural language processing, deep learning and logic-based learning, that would extract domain-independent concept sentences.
-
-
-\section{Limitations and Assumptions}
-% Probably talk about in the initial project things.
-
-At the moment, only the syntactic concept generalisation is being made. 
-A consequence of using syntactic concept generalisation is that the events happening in the video are isolated as sentences with no content linking between them. 
-Additionally, the tokens in a generalised concept sentence must first occur in the original one.
-This procedure may result in grammatically incorrect sentences.
-For example, consider a sentence: \emph{The left fielder caught the ball.}.
-With our current approach, the system can extract the following sentence \emph{The fielder caught the ball.}.
-However, the issue is that it can be unclear who \emph{the fielder} is now because it was previously determined by the adjective \emph{left}.
-
-An extension might be able to relax this limitation.
-The most straightforward possible approach for resolving this issue may replace \emph{the} with \emph{a} in a generalisation where additional information about the determined noun is removed.
-
-More advanced generalisation could involve swapping words out for their synonyms.
-An additional extension could involve linking entities from one sentence to another. 
-
-
-
-\section{Objectives}
-
-The objectives of this project are:
-
- - Develop and evaluate a general syntactic framework for extracting concept sentences from any given sentence. The process would be split into decomposing non-atomic sentences into atomic and generating concept sentences from atomic sentences.
- 
- - Explore how does this framework aid deep neural network models in the context of video classification, namely whether an improvement is achieved for the MLB-V2E dataset \cite{RefWorks:RefID:16-2021automatic}.
-
-
- - Time permitting, generate a natural language explanation of the label chosen by the classifier. 
-
-
-\section{Challenges}
-
-This section highlights challenges that are anticipated to happen and a brief overview of its difficulties.
-The section will be revised upon completion of the project once the topics' complexity is more evident.
-
-The following questions will be difficult but necessary to answer as a part of this project:
-
- - \emph{How should a concept extracted from natural language be defined?} Making a helpful concept and immediately extensible to other domains may be difficult. One cannot use expert knowledge to help craft features that the subsequent architecture should use.
- 
- 
- - \emph{How will the concept extraction pipeline be scaled with a large amount of data?} The proposed system will include logic-based learning systems ILASP \cite{RefWorks:RefID:18-law2020ilasp} to extract syntactic concept sentences. 
- Unfortunately, the system is not scalable with respect to hypothesis space. On the other hand, more scalable alternative FastLAS \cite{RefWorks:RefID:19-law2020fastlas:} includes limitations that may be impossible to workaround.
- 
- - \emph{How is an atomic sentence decomposed into a concept sentence?} This is the critical problem the system must resolve to be used.
-
- - \emph{How should the sentences be decomposed into atomic sentences?} This is one of the critical problems this system would need to resolve to be applied effectively. It may become a much more complex issue than concept sentence extraction, which can be designed as graph pruning of a dependency graph.
- 
-
-
-\section{Contributions}
-
-Not relevant yet.
-
+% Lanky boy suggestions
 % What is the problem?
 % Why is it interesting?
 % What is the main idea for solving it?
 
+\chapter{Introduction}
+
+% What we aim to do - we aim to develop an interpretable NN pipeline
+% Why is it important - applicability in high risk domains to verify that such a solution does indeed work.
+
+Understanding why a machine learning model makes a particular prediction is always beneficial. 
+It verifies that the model has learned a correct solution instead of a spurious pattern in the training data.
+Interpretability is extremely important when applying models in a high-risk environment, such as autonomous cars, where a cost of an error is extremely high.
+
+Interpretable models do exist.
+Humans can easily interpret decision trees and logic-based models to understand why they produce a specific solution.
+However, they fail to reach the level of performance that end-to-end neural networks achieve.
+
+Concept bottleneck models \cite{RefWorks:RefID:35-koh2020concept} are a novel set of models achieving comparable performance to end-to-end NNs while allowing the understanding of their prediction.
+They use neural networks to predict high-level human-engineered concepts before predicting the final label.
+As such, they allow reasoning about the final labels with intermediate concepts they have predicted.
+
+In this project, we take the concept bottleneck idea further by mining a set of concepts directly from human-generated text explanations.
+In addition, we further improve the model interpretability by designing a logic-based classification pipeline from intermediate concepts to final labels.
+
+
+% If done successfully, given natural language explanations could even be used to explain unseen classification examples or improve the video classification performance.
+
+
+\section{Motivation}
+
+Natural language can be used as metadata for any sort of data.
+To make it machine-readable and valuable for a task at hand, one needs to extract relevant pieces of information about it consistently.
+
+However, using textual information is a challenging task.
+Humans speak and write at varying levels of granularity, and a sentence may contain multiple relevant pieces of information.
+For instance, consider the following explanations of the same event:
+\begin{lstlisting}
+The footballer scored a goal with his left foot but the referee flagged it as offside.
+The player beautifully found the back of the net. However, it was cancelled because he was offside.
+\end{lstlisting}
+They convey similar semantic information in a very different syntactic manner.
+
+The semantic parsing tasks showcase how challenging it is to deal with such a problem.
+These tasks aim to convert a sentence into a convenient form for a machine, such as the logical form, which they can then use for other downstream tasks.
+% Abstract meaning representation https://amr.isi.edu/a.pdf
+One instance of such a task is Abstract Meaning Representation Parsing, which converts sentences into a tree form that captures general semantic relations.
+% Structure-aware Fine-tuning of Sequence-to-sequence Transformers for Transition-based AMR Parsing
+The current state of the art only achieves the F1 score of 0.817, allowing room for significant improvement.
+
+For our use case, the text may even be more general than what semantic parsing approaches capture.
+It should be able to deal with any declarative sentences stating facts that have occurred.
+However, the concepts captured from text explanations in our case need not have a concept in a structured form.
+
+But, the sentences it deals with can contain possibly irrelevant information for some tasks but not others.
+For example, if the first explanation was used for a task counting how many goals were offside, it being scored with the left foot is irrelevant to the task.
+It would be necessary if we wanted to capture how often a player scores with his weaker foot.
+
+The concepts also need to be minable in various domains.
+We aim to design a method that will work in different domains, the same as the concept bottleneck models.
+Detecting bird types or baseball events should both be possible if a relevant set of explanations is provided within the framework.
+
+Moreover, the set of concepts should be interpretable.
+If the method were to extract a concept \emph{red}, it would usually be unclear where a human should find that colour.
+In the bird classification case, does it mean that there should be a red colour anywhere in the image or that a bird should have black feathers?
+
+Considering all listed considerations, we have designed a mostly syntactic concept mining framework extracting concept sentences from the text.
+The mostly syntactic nature allows the method to be applicable in various domains.
+The only slightly semantic part involves sentence grouping with transformers, which is also domain-independent. 
+
+The key part of the framework consists of purely syntactic \textbf{atomisation} and \textbf{generalisation} stages.
+They present the text information in a much more consistent form.
+The former extracts atomic sentences from the data, sentences which convey only one piece of information.
+The latter finds all concept sentences from atomic sentences, which capture all grammatically correct sentences with varying levels of information.
+For example, \textbf{atomisation} would convert a sentence in the following manner:
+\begin{lstlisting}
+The footballer scored a goal with his left foot but the referee flagged it as offside.
+ $\rightarrow$
+The footballer scored a goal with his left foot. The referee flagged it as offside.
+\end{lstlisting}
+It captures two events which occurred as separate sentences.
+Moreover, \textbf{generalisation} would convert an atomic sentence in this manner:
+\begin{lstlisting}
+The footballer scored a goal with his left foot.
+ $\rightarrow$
+The footballer scored a goal with his left foot. 
+The footballer scored a goal with his foot. 
+The footballer scored a goal.
+\end{lstlisting}
+Any of these sentences may convey the ideal level of granularity for a task.
+
+Notice that the concept sentences capture all of the three criteria outlined. 
+They are domain independent as they are syntactic, capture information at any level of granularity, and are interpretable since they are full valid sentences.
+
+
+The project additionally wants to improve the interpretability of the concept bottleneck method.
+The original concept bottleneck paper \cite{RefWorks:RefID:35-koh2020concept} highlights what concepts a NN has detected.
+Nevertheless, it provides no guarantee that these concepts are indeed used in the final prediction of the network.
+
+To tackle this challenge, we present a fully interpretable classification framework.
+This framework allows classifying a label given a set of concepts and their probability of occurring.
+
+% As such, this project aims to propose a novel method, combining techniques from natural language processing, deep learning and logic-based learning, that would extract domain-independent concept sentences.
+
+\section{Objectives}
+
+This project proposes a novel method, combining techniques from natural language processing, deep learning and logic-based learning to develop an interpretable and general high-quality classifier.
+It is a continuation of the work by Jeyakumar et al. \cite{RefWorks:RefID:16-2021automatic}, which develops a concept mining framework trained with a concept bottleneck model for the baseball classification problem. 
+We can translate the goal of the project into the following high-level objectives:
+
+% objectives
+%  - concept mining 
+%  - improved explainability
+%  - explore the generality of the methods
+
+\begin{itemize}
+    \item Develop a general framework for mining concept sentences --- The goal is to extract concept sentences from declarative sentences successfully. That framework should capture information at various levels of granularity and be domain-independent.
+    
+    \item Improve the explainability of the concept bottleneck model ---  The inherited code provided the explanations by choosing the top three concepts with the highest attention score.
+    We aim to improve upon the inherited work by enhancing the explanation quality and simplifying the interpretation of the explanations.
+    
+    \item Explore the generality of the methods. --- The inherited work was developed targeting a baseball video classification pipeline.
+    We explore whether a method can be translated to other domains by evaluating the performance of the CUB-birds dataset.
+    
+\end{itemize}
+
+\section{Challenges}
+
+There were several key challenges which needed to be handled as a part of this project:
+
+\emph{How should a concept mined from natural language be defined?} Making a concept helpful and immediately extensible to other domains may be difficult. One cannot use expert knowledge to help craft features that the subsequent architecture should use.
+ 
+\emph{How should a sentence be decomposed into a concept/atomic sentence?} These are the critical problems the system must resolve to be used.
+
+\emph{How will the concept mining pipeline be scaled with a large amount of data?} The proposed system includes a logic-based learning system ILASP \cite{RefWorks:RefID:18-law2020ilasp} to extract syntactic concept sentences. 
+ Unfortunately, the system is not scalable with respect to the hypothesis space. On the other hand, a more scalable alternative, FastLAS, \cite{RefWorks:RefID:19-law2020fastlas:} has limitations that are impossible to work around.
+ 
+\emph{How can an ASP-based logic-based learning framework use a probabilistic set of facts?} The Answer Set Programming has no mechanism for dealing with probabilistic atoms. Each atom can either be included or not be included in the answer set.
+On the other hand, each concept will be predicted with some probability $p$ of it being true, which the chosen FastLas \cite{RefWorks:RefID:19-law2020fastlas:} learner should consider. 
+
+\section{Contributions}
+
+% Start from the objectives and say from that
+The following are the main contributions of this project:
+
+\begin{itemize}
+    \item A method for mining concept sentences from declarative sentences. (Chapter \ref{solving-nlp-tasks-logically})
+    
+    \item A concept bottleneck model utilising human-written label explanations which can provide reasons for its decision. Such a change only slightly decreases the model performance. (Chapter \ref{concept-bottleneck-pipeline})
+    
+    \item A logical-based learning framework for dealing with probabilistic facts. (Chapter \ref{logic-based-classification})
+\end{itemize}
+
+
+% \section{Limitations and Assumptions}
+% % Probably talk about in the initial project things.
+% 
+% At the moment, only the syntactic concept generalisation is being made. 
+% A consequence of using syntactic concept generalisation is that the events happening in the video are isolated as sentences with no content linking between them. 
+% Additionally, the tokens in a generalised concept sentence must first occur in the original one.
+% This procedure may result in grammatically incorrect sentences.
+% For example, consider a sentence: \emph{The left fielder caught the ball.}.
+% With our current approach, the system can extract the following sentence \emph{The fielder caught the ball.}.
+% However, the issue is that it can be unclear who \emph{the fielder} is now because it was previously determined by the adjective \emph{left}.
+% 
+% An extension might be able to relax this limitation.
+% The most straightforward possible approach for resolving this issue may replace \emph{the} with \emph{a} in a generalisation where additional information about the determined noun is removed.
+% 
+% More advanced generalisation could involve swapping words out for their synonyms.
+may% An additional extension could involve linking entities from one sentence to another. 

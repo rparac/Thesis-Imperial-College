@@ -1,4 +1,5 @@
 \chapter{Logic-Based Classification}
+\label{logic-based-classification}
 
 % TODO: Alessandra feeedback
 % Concept extraction can be used for a classification problem - that problem uses attention on the concepts to determine which ones are more active
@@ -519,5 +520,41 @@ The tracking allows to replace $C$ identical examples of penalty $\text{round} \
 % \subsubsection{Search Space Counting}
 % TODO: Finish Implementation
 
-\subsection{Example Aggregation}
+\section{Evaluation}
 
+% INSERT FF-NSL paper
+The developed logic-based classification method is on the sudoku experiments shown in X.
+Such experiments will validate how well does indeed work well.
+The further experiments how well the logic base classification would work when placed in the context of a concept botteleneck model.
+
+
+\subsection{Logic-based classification evaluation}
+
+% INSERT usage chapter in the thesis instead of here
+In this subsection, we will evaluate the sudoku grid validity task.
+The task needs to evaluate whether a hand-written sudoku board is or is not valid.
+The architecture for solving such task consists of three parts: 
+\begin{enumerate}
+    \item NN predicting the value of each of the present digit.
+    \item Module converting the prediction scores into a logical encoding.
+    \item Clingo \cite{RefWorks:RefID:22-clingo} answer set solver which produces the final result based of learned rules and the logical encoding.
+\end{enumerate}
+When learning, the 2nd step is replaced by an example encoder while the 3rd step is carried out by FastLAS.
+
+
+We will compare the our approach to three baselines: random forest, CNN-LSTM architecture and FF-NSL architecture.
+The FF-NSL architecture similarly uses example penalties to give higher penalties to more likely examples, but the selection of the penalties was simply done through empirical evaluation.
+In addition, it only accounts for the best prediction of a neural network instead of all of them.
+
+\subsubsection{Sudoku Grid Learning}
+
+This task aims to determine whether a sudoku grid is valid, i.e. there are no repeated number in block, row nor column.
+It is tested for the 
+
+The results of a neural 
+
+
+% INSERT task architecture image for sudoku grid validity
+This task needs to determine whether a sudoku grid is or is not valid based on the 
+
+% TODO: Luke feedback -random forest -feature importance - how often a predicate gets used to make a prediction 
