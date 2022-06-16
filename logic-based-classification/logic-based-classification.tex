@@ -6,15 +6,51 @@
 % A more interpretable approach would involve rule-based classification, which we explore in this section
 % Furthermore, despite the concept extraction from text presented, concepts can really be any features which is accounted for in this chapter.
 
-This chapter presents a  classification method using an ILP system, which has an advantage over neural network classification methods because of its interpretability.
-% TODO: Insert next chapter
-The method works with probabilistic facts, allowing it to be incorporated into a complex NN pipeline, such as the one presented in the chapter.
+In order to find reasons for choosing a particular label, the concept bottleneck pipeline \cite{RefWorks:RefID:35-koh2020concept} uses human-explainable high-level concepts in the intermediate layer.
+These concepts should help a user to understand why a prediction happened.
+However, just because concepts are predicted does not mean they are indeed used in the final prediction.
+
+For example, a network may learn a pattern which predicts a label \emph{out}, if some concept has a value greater than 0.2.
+Yet, such a concept would not be shown to the user as relevant for the final prediction.
+Showcasing concepts after the attention layer, as we have done in the previous chapter, would showcase more relevant concepts for the final prediction.
+Still, the attention layer showcases how much weight each concept has in the final prediction, but not the logic the MLP uses in order to choose the final label.
+
+A fully interpretable method for predicting the final label would provide a clear link between the concepts and the outcomes.
+In addition, model from concepts to the label can be validated and should in an ideal case follow the same logic as humans.
+
+To improve upon the concept bottleneck model interpretability, this chapter presents a classification method using an ILP system.
+The method works with probabilistic facts, allowing it to be incorporated into a concept bottleneck pipeline (Chapter \ref{concept-bottleneck-pipeline}).
+Nevertheless, it is not limited to text concepts; it is applicable with any interpretable probabilistic NN output. 
+% INSERT ref to evaluation
+In section X, we use it with outcomes of a image classification task.
 The ILP system utilised for this task is FastLAS \cite{RefWorks:RefID:19-law2020fastlas:}, a scalable system that incorporates criteria for domain-specific optimisation.
 
-% INSERT Daniel's paper reference
-The main idea is to generate examples with higher noise penalties that are more likely to occur, similar to X.
-However, we aim to use those penalties to find the most likely solution.
+% TODO: change title
+\section{Change to the Concept Bottleneck Architecture}
+\label{change-to-the-concept-bottleneck-architecture}
 
+An introduction of the rule learning component would result in the change in the concept bottleneck architecture shown in figure \ref{logic-based-concept-bottleneck}.
+\begin{figure}[h]
+\caption{A flowchart to select an outcome of a multi-label classification problem.}
+\vspace{10pt}
+\centering
+\includegraphics[width=\textwidth]{logic-based-classification/logic-based-classification-architecture.png}
+\label{logic-based-concept-bottleneck}
+\end{figure}
+
+Training a concept bottleneck pipeline then turns into a 3-step process:
+\begin{enumerate}
+    \item Train a model in the same manner as in the Chapter \ref{concept-bottleneck-pipeline}, by minimising the loss CoDEx concept vector and final label prediction loss.
+    \item Generate examples for the rule-learning component using the concepts predicted by the model from step 1). Each example needs to take into account the probabilities of all concepts.
+    \item Train the rule-learning component.
+\end{enumerate}
+
+At run-time take predict the concepts using the model trained in step 1, before applying the rules learned in step 3 to obtain the final prediction.
+
+% INSERT FF-NSL reference
+The ILP paradigm does not support any notion of probability; an atom can either be in or out of an answer set. 
+So, to force the learner to treat less less likely cases differently, we carefully choose the FastLAS example penalties, similar to X.
+However, we aim to use those penalties to find the most likely solution.
 
 \section{Choosing FastLAS Parameter Values}
 \label{choosing-fastlas-parameter-values}
@@ -522,39 +558,102 @@ The tracking allows to replace $C$ identical examples of penalty $\text{round} \
 
 \section{Evaluation}
 
-% INSERT FF-NSL paper
-The developed logic-based classification method is on the sudoku experiments shown in X.
-Such experiments will validate how well does indeed work well.
-The further experiments how well the logic base classification would work when placed in the context of a concept botteleneck model.
-
-
-\subsection{Logic-based classification evaluation}
-
-% INSERT usage chapter in the thesis instead of here
-In this subsection, we will evaluate the sudoku grid validity task.
-The task needs to evaluate whether a hand-written sudoku board is or is not valid.
-The architecture for solving such task consists of three parts: 
+The evaluation is carried out on two tasks: 
 \begin{enumerate}
-    \item NN predicting the value of each of the present digit.
-    \item Module converting the prediction scores into a logical encoding.
-    \item Clingo \cite{RefWorks:RefID:22-clingo} answer set solver which produces the final result based of learned rules and the logical encoding.
+    \item Sudoku grid validity
+    \item MLB-V2E classification
 \end{enumerate}
-When learning, the 2nd step is replaced by an example encoder while the 3rd step is carried out by FastLAS.
+
+The former is a much simpler task which will evaluate whether the method does indeed work well, while the latter will consider the Prob-FF-NSL framework within the context of a concept bottleneck pipeline.
+
+\subsection{Sudoku grid learning}
+
+This task aims to determine whether a sudoku grid with hand-written digits is valid, i.e. there are no repeated number in block, row nor column.
+% INSERT FF-NSL
+It is the repeat of the task studied in X.
+There are two versions of it, 4x4 and 9x9 sudoku grid validity tasks.
+
+The network uses a probabilistic ILP framework to account for uncertainties in the digit prediction NN.
+The prediction confidence values are inputted to the Prob-FF-NSL framework.
+
+Given that this task is simple to tackle for a logic-based learning system and a standard CNN, it is explored with different percentages of digit images are subject to a distribution shift.
+The distribution shift in this case is a 90 degree image rotation.
+It has a significant impact for the overall task, reducing the accuracy of digit prediction from 99\% to 14\%.
+
+We will compare the our approach to three baselines: random forest, CNN-LSTM architecture and FF-NSL architecture. 
+The latter similarly uses example penalties to give higher penalties to more likely examples, but the selection of the penalties was done through empirical evaluation.
+% INSERT reference to section with FF-NSL
+It is explained in more detail in X.
+% INSERT Uncertainty-aware deep classifiers using generative models
+The FF-NSL and Prob-FF-NSL are tested out with a standard digit predictor and uncertainty aware one based on X.
+The standard digit predictor is often confidently wrong under a distribution shift, while the uncertainty aware one returns a more evenly spread out distribution upon seeing unfamiliar examples.
+
+The learned models are compared with the true test set and the shifted test test.
+The former always inputs the correct value to the network, while the latter has the same proportion of digit images shifted as the Prob-FF-NSL training set.
+
+The results for the sudoku 4x4 task are shown in figure \ref{sudoku4x4-results}.
+
+\begin{figure}[h]
+\caption{A comparison of the sudoku 4x4 task performance with increasing level of distribution shifts}
+\centering
+\includegraphics[width=\textwidth]{logic-based-classification/sudoku_4x4_structured_test_data_results.png}
+\label{sudoku4x4-results}
+\end{figure}
 
 
-We will compare the our approach to three baselines: random forest, CNN-LSTM architecture and FF-NSL architecture.
-The FF-NSL architecture similarly uses example penalties to give higher penalties to more likely examples, but the selection of the penalties was simply done through empirical evaluation.
-In addition, it only accounts for the best prediction of a neural network instead of all of them.
 
-\subsubsection{Sudoku Grid Learning}
-
-This task aims to determine whether a sudoku grid is valid, i.e. there are no repeated number in block, row nor column.
-It is tested for the 
-
-The results of a neural 
+The results for sudoku 9x9 are shown in figure \ref{sudoku9x9-results}
+\begin{figure}[h]
+\caption{A comparison of the sudoku 4x4 task performance with increasing level of distribution shifts}
+\centering
+\includegraphics[width=\textwidth]{logic-based-classification/sudoku_4x4_structured_test_data_results.png}
+\label{sudoku9x9-results}
+\end{figure}
 
 
-% INSERT task architecture image for sudoku grid validity
-This task needs to determine whether a sudoku grid is or is not valid based on the 
+All in all, the Prob-FF-NSL generally performs well, having a perfect true test score in spite of 70\% of examples under a distribution shift.
+However, it performs worse than the FF-NSL method on this particular task. 
+The reason for it is the higher importance the FF-NSL assigns to the train examples that are not under the distribution shift.
+It may be useful to integrate a similar notion of example importance to the Prob-NSL approach too.
+
+
+\subsection{Concept Bottleneck Pipeline}
+
+We also test the presented Prob-NSL framework within the context of a concept bottleneck model.
+The architecture that the Prob-NSL model used for this task is presented in \ref{change-to-the-concept-bottleneck-architecture}.
+
+As baselines, we compare the model to an end-to-end network and the concept bottleneck model with identical architectures.
+The latter is the same model that is used for the concept prediction for the Prob-NSL model.
+
+Their results are summarised in the table below:
+
+\begin{center}
+\begin{tabular}{ |M{3cm}||M{3cm}|M{3cm}|M{3cm}|  }
+ \hline
+ \multicolumn{4}{|c|}{Accuracy Comparison} \\
+ \hline
+ \hline
+  & End-to-end model&Concept bottleneck model & Prob-NSL concept bottleneck \\ 
+ \hline
+ Train & X $\pm$ X & X $\pm$ X & 0.922 $\pm$ 0.021 \\
+ Test & 0.687 $\pm$ 0.004 & 0.685 $\pm$ 0.005 & 0.910 $\pm$ 0.023 \\
+ \hline
+\end{tabular}
+\end{center}
+
+The Prob-NSL model greatly outperforms the other two with ~33\% test higher test set accuracy.
+The results could have been even higher if there the concept bottleneck model is able to distinguish between \emph{strike} and \emph{ball} well.
+In some instances, the model predicts a \emph{strike} in every case where there is a \emph{strike}.
+When the model learns well enough to distinguish between the two, the accuracy jumps to values as high as 96\%.
+
+\section{Discussion}
+
+The proposed logic based classification method, working extremely well as a part of the concept bottleneck pipeline.
+It outperforms the approach from Chapter \ref{concept-bottleneck-pipeline}.
+
+% INSERT Online Symbolic Learning of Policies for Explainable Security reference
+The method could be further improved, such as setting different penalties on examples that we care more about being satisfied.
+Moreover, the approach for choosing a prior chosen may not be flexible enough for all possible applications.
+Incorporating the configurable prior approach shown in X would have a lot of benefit for some applications.
 
 % TODO: Luke feedback -random forest -feature importance - how often a predicate gets used to make a prediction 
