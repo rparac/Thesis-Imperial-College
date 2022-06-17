@@ -109,9 +109,13 @@ Some systems use a weakened version of that statement to allow for noisy example
 
 Many ILP systems have been developed over the years, such as Progol5 \cite{RefWorks:RefID:43-muggleton2000theory}, HAIL \cite{RefWorks:RefID:44-ray2003hybrid}, TopLog \cite{RefWorks:RefID:45-muggletontoplog:}, and TAL \cite{RefWorks:RefID:46-corapi2010inductive}.
 
-The chosen system for this project is ILASP \cite{RefWorks:RefID:18-law2020ilasp}, a system that does the inductive learning of the answer sets programs.
+The chosen systems for this project are ILASP \cite{RefWorks:RefID:18-law2020ilasp} and FastLAS \cite{RefWorks:RefID:19-law2020fastlas:}, systems that do the inductive learning of the answer sets programs.
 Choosing a system that learns ASP is done because the ASP environment can effectively perform non-monotonic reasoning.\\
 
+The two chosen systems have a very similar in their syntax, with FastLAS developed as a more scalable alternative to ILASP. 
+However, FastLAS is less general than ILASP for that reason.
+
+We first introduce ILASP, before highlighting the differences FastLAS has.
 To understand the ILASP system fully, a few more definitions need to be introduced.
 
 An atom A is \textbf{bravely entailed} if by a logic program P if it is included (true) in at least one answer set of P. 
@@ -153,7 +157,7 @@ Similarly, the \#modeha defines that an atom can occur in the aggregate of the r
 The \#modeb syntax defines that an atom can occur in the body either as a positive or negative atom.
 Finally, the \#constant defines constants that can replace const functions.
 
-Let $S_M$ be the search space constructed from the language bias M, B background knowledge, $E^+$/$E^-$ set of positive/negative examples, T = $<B, S_M, E^+, E^->$ is the \textbf{learning from answer set task} \cite{RefWorks:RefID:47-law2014inductive}.
+Let $S_M$ be the search space constructed from the language bias M, B background knowledge, $E^+$/$E^-$ set of positive/negative examples, T = $<B, S_M, E^+, E^->$ is the \textbf{learning from answer set task} ($ILP_{LAS}$) \cite{RefWorks:RefID:47-law2014inductive}.
 The hypothesis H is a set of inductive solution iff:
 
 1. It is a subset of search space $S_M$.
@@ -163,7 +167,9 @@ The hypothesis H is a set of inductive solution iff:
 3. For every positive example $e^+$, there is an answer set A of the program $B \cap H$ which extends it.
 \\
 
-Notice that the positive examples are bravely entailed while the negative are cautiously entailed.\\
+We write $H \in ILP_{LAS}$ when $H$ satisfies the above criteria.
+Notice that the positive examples are bravely entailed while the negative are cautiously entailed.
+\\
 
 \subsubsection{Examples in ILASP}
 \label{examples-in-ilasp}
@@ -190,6 +196,12 @@ With this parameter, the agent tries to find hypothesis H such that an answer se
 The analogue holds for negative examples. 
 A formal definition of the Context-dependent Learning from Ordered Answer Sets framework can be found in work by Broda et al., \cite{RefWorks:RefID:56-broda2016iterative} which introduced context-dependent examples to ILASP. \\
 
+FastLAS is much more scalable with respect to hypothesis space size than ILASP, but the tasks it can solve.
+The syntax they use is practically identical, only that FastLAS is able to pick up constants from the background.
+The tasks it is able to solve are not as general as ILASP ones. 
+For example, the programs constructed will generate at most one answer set \cite{RefWorks:RefID:19-law2020fastlas:}.
+
+with respect to the hypothesis 
 FastLAS \cite{RefWorks:RefID:19-law2020fastlas:}, a much faster alternative to ILASP, has been developed recently.
 Unfortunately, to get to the desired level of scale, the system operates with certain constraints which are too restrictive for this project.
 For example, the programs constructed will generate at most one answer set.
