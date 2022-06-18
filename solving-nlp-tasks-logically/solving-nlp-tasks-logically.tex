@@ -6,7 +6,6 @@
 
 
 % TODO: Alessandra feedback: use running examples because it's easier to understand that way
-% TODO: Alessandra feedback: do comparison with semantic entailment if it is
 \chapter{Solving NLP Tasks Logically}
 \label{solving-nlp-tasks-logically}
 
@@ -17,23 +16,24 @@ After all, having a sentence in a logical form allows reasoning about it to form
 
 However, in this chapter, the logic is used in a slightly unconventional manner for NLP.
 It is an intermediate representation for a sequence-to-sequence problem where it captures only the syntax of the text rather than its meaning.
-The current state of the art approach for sequence-to-sequence problems, such as language translation, uses transformers. 
+The current state-of-the-art approaches for sequence-to-sequence problems, such as language translation, all use transformers. 
 Nevertheless, seq2seq transformers would perform poorly with available datasets for the two problems tackled in this chapter.
 The datasets consisting of ~100 examples are too small for a model with billions of parameters to be able to generalise.
 % INSERT Imdb dataset reference 
 Transformer fine-tuning is usually done on tens of thousands of examples, such as the IMDB Movie Reviews dataset. \\
 % INSERT reference second year notes.
-On the other hand, logic-based learning systems can generalise well from a tiny number of examples, making them suitable for the problems presented in this chapter. \\
+On the other hand, logic-based learning systems can generalise well from few examples, making them suitable for the problems presented in this chapter. 
 
+In this chapter, we demonstrate how to solve two seq2seq NLP tasks using logical approaches, which constitute a crucial part of our concept bottleneck model (Chapter \ref{concept-bottleneck-pipeline}).
+They are combined into a sentence-to-sentence transformer (note the difference between the standard transformer), shown diagrammatically in the figure \ref{sentence2sentence-transformer}.
 
-In this chapter, the following topics are presented:
-\begin{itemize}
-    \item Introduction of atomisation and generalisation tasks
-    \item A logical approach to solving the generalisation task.
-    \item A logical approach to solving the atomisation task.
-    \item Implementation details for solving these two problems.
-    \item Evaluation of the two methods.
-\end{itemize}
+\begin{figure}[h]
+\caption{Diagrammatic representation of the sentenece2sentence transformer}
+\vspace{10pt}
+\centering
+\includegraphics[width=\textwidth]{solving-nlp-tasks-logically/sent2sent_transformer.png}
+\label{sentence2sentence-transformer}
+\end{figure}
 
 
 
@@ -44,14 +44,11 @@ In this chapter, the following topics are presented:
 % From what I understood Ale's feedback is decided on the Nuri's paper - if there is time look into his papers for inspiration
  
 \section{Sequence2Sequence Tasks}
+\label{sentence-type-definitions}
 
 The two tasks that have been tackled using logic based learning approach are \textbf{sentence} \textbf{atomisation} and \textbf{generalisation}.
 
 The former converts a declarative sentence into one or more \textbf{atomic sentences}, while the latter converts an \textbf{atomic sentence} into one or more \textbf{concept sentences}.
-
-% TODO: Alessandra feedback: no need for a subsection. Merge with the previous one
-\subsection{Sentence Type Definitions}
-\label{sentence-type-definitions}
 
 \textbf{Atomic Sentence:} A sentence that cannot be decomposed into multiple valid sentences. \\
 % TODO add reference %
@@ -96,49 +93,51 @@ The batter sent it.
 
 \end{example}
 
-% TODO: Alessandra feedback: no need for a subsection. Merge with the previous one
-\subsection{Purpose of the Tasks}
+These two tasks (i.e. the sentence-to-sentence transformer) serve as a replacement for the extraction part of the original CoDEx (Concept Discovery and Extraction) pipeline (\ref{inherited-work}).
 
-The two tasks mentioned are a part of the Concept Bottleneck pipeline discussed in greater detail in Chapter \ref{concept-bottleneck-pipeline}
-These two tasks are used in sequence as a replacement for the extraction part of the original CoDEx (Concept Discovery and Extraction) pipeline \ref{inherited-work}.
-
-The reason the project aims to extract all concept sentences from a particular sentence is two-fold:
+Notice that both tasks are purely syntactic; one requires no understanding of the sentence to atomise/generalise it.
+The benefit of a syntactic approach is its domain independence, allowing it to be seamlessly applied to sentences with a completely different meaning.
+In addition, the reason the project aims to extract all concept sentences from a particular sentence is two-fold:
 \begin{enumerate}
     \item Concept sentences help associate differently worded explanations of the same concept.
     \item The final generated sentences are immediately usable for explanations.
 \end{enumerate}
 
-% TODO: Alessandra feedback: add part 2 of the diagram from the introduction but now show the syntactic parse trees to showcase what we are doing in this part
-% TODO: Alessandra feedback: talk about the definition of the learning task associated with the background.
-% TODO: Alessandra feedback: make background/language_bias \paragraph or something similar so that they don't appear in the table of contents
-\section{Solving Concept Generalisation}
-\label{solving-generalisation-task}
+% TODO: Alessandra feedback: argue that atomistaion is a 3-step process - generate logical form + apply rules + reconstruct the data
+% TODO: Alessandra feedback: add diagram with dependency trees - alessandra feedback-diagrams.png has a sketch
 
-\subsection{Logical Encoding}
+% TODO: Alessandra feedback: add part 1 of the diagram from the introduction but now show the syntactic parse trees to showcase what we are doing in this part
+% TODO: Alessandra feedback: argue why the atomisation task is harder than the generalisation
+\section{Solving Atomisation Task}
+\label{solving-atomisation-task}
+
+The atomisation task is the more challenging of the two.
+The reason is the diversity of the input the model must handle, both with respect to size and the types of tokens encountered.
+The atomiser should ideally be able to process any declarative sentence, whereas the generaliser expects an atomic sentence as input, which is significantly easier to handle. 
+
+To tackle this task, we have constructed a hand-crafted solution whose application is shown in \ref{atomisation-diagram}.
+
+\begin{figure}[h]
+\caption{Diagrammatic representation of the atomiser}
+\vspace{5pt}
+\centering
+\includegraphics[width=\textwidth]{solving-nlp-tasks-logically/Atomisation diagram.png}
+\label{atomisation-diagram}
+\end{figure}
+
+In this section, we will introduce the steps the atomiser consists of and demonstrate the idea behind a hand-crafted solution.
+% We also showcase that ILASP \cite{RefWorks:RefID:54-ilasp}, a state of the art system for learning answer set programs, is currently not scalable enough to learn a better solution than the hand-crafted one.
+
+\subsection{Logical Encoding of a Sentence}
 \label{logical-encoding}
 
-In this subsection, we showcase how the example sentences are encoded logically and the pipeline used at test time to generate solutions.
-All encodings are compatible with the Answer Set Programming \cite{RefWorks:RefID:1-lifschitz2008answer} paradigm.
-The solution learning is described in the following subsection (\ref{encoding-the-learning-task}), which relies on the encodings presented in this subsection. 
+All of the logical encodings presented are compatible with the Answer Set Programming paradigm (\ref{answer-set-programming}), a popular paradigm that deals with negation as failure well.
 
-
-A solution to the \textbf{concept generalisation} task is learned using the Inductive Logic Programming tool ILASP \cite{RefWorks:RefID:18-law2020ilasp}.
-
-\subsubsection{Encoding the Example Premise}
-
-% TODO: delete this because it is discussesed in the implementation
-\textbf{Generalisation} examples consist of a given sentence followed by one to many sentences, which are ways in which the provided sentence can be generalised/atomised.
-For instance, here is a possible \textbf{generalisation} example:
-\begin{verbatim}
-"It was a fast ball.", "It was a ball. It was a fast ball."
-\end{verbatim}
-
-
-We first need to define a way to convert the sentences into a logical representation that we could use to reason about the sentence structure.
+We first need to define a way to convert a sentence into a logical representation that we could use to reason about the sentence structure.
 Ideally, a sentence representation should satisfy the following criteria:
 \begin{itemize}
     \item Word dependency capture --- The representation should capture dependencies between words to determine whether a word is crucial to the meaning of a sentence.
-    \item Similar meaning $\rightarrow$ similar encoding --- Slight word variations such as words replaced by synonyms should be encoded similarly. The task becomes easier for the learner when the words with the same meaning are captured by the exact representation.
+    \item Similar meaning $\rightarrow$ similar encoding --- Slight word variations such as words replaced by synonyms should be encoded similarly. The task becomes easier for the learner when the exact representation captures the words with the same meaning.
     \item Compactness --- Smaller representations are quicker to process. 
     \item Domain independence --- We want to apply the generalisation task in various domains, so the representation should not contain domain-specific information.
     \item Interpretability --- It should be clear what the representation encodes. We can translate the learned ILASP solution into English if the predicates are interpretable. Hence, we can verify whether the system learned spurious correlations or valuable rules.
@@ -146,15 +145,14 @@ Ideally, a sentence representation should satisfy the following criteria:
 \end{itemize}
 
 
-% INSERT word2vec reference
-A common approach to encoding a sentence involves using dense-vector contextualised embeddings of words, such as the ones produced by Word2vec.
+% INSERT word2vec reference -Efficient Estimation of Word Representations in Vector Space
+A common approach to encoding a sentence involves using dense-vector contextualised embeddings of words, such as the ones produced by word2vec.
 Dense-vector embeddings are practical because they are compact and tend to capture the semantics of words (i.e. map similar words to similar value embeddings).
 Transformers improve upon these embeddings by using the self-attention mechanism to provide an even better representation of a sentence.
 
 However, dense-vector embeddings are not interpretable, making them difficult to use with our problem. 
 The learning approach that we have used follows a similar idea of trying to capture semantic relationships within a sentence.
-We utilise the \textbf{dependency parse tree} as a basis for the \textbf{generalisation} task as it captures syntactic relationships between words.
-% INSERT reference NLP notes
+We utilise the dependency parse tree (\ref{dependency-parsing}) as a basis for the generalisation task as it captures syntactic relationships between words.
 Note that the syntactic relationships captured approximate the semantic relationships between words.
 In addition, words themselves are put into logical predicates, making the sentences reconstructible.
 
@@ -170,29 +168,30 @@ In addition, \verb_root_ encodes which token is the root of the sentence.
 
 \begin{example}
 \label{logical-encoding-example}
-Encoding \textit{he threw a fast ball}, with a dependency graph shown in \ref{example-dependency-graph}:
+Encoding \textit{the batter swung and missed}, with a dependency graph shown in \ref{example-dependency-graph}:
 \begin{enumerate}
     \item Convert each token in the tree to a logical form
     \begin{verbatim}
-        token(tok0, "he").
-        token(tok1, "threw").
-        token(tok2, "a").
-        token(tok3, "fast").
-        token(tok4, "ball").
+        token(tok0, "the").
+        token(tok1, "batter").
+        token(tok2, "swung").
+        token(tok3, "and").
+        token(tok4, "missed").
     \end{verbatim}
     \item Convert arcs and roots of the tree to predicates:
     \begin{verbatim}
-        root(tok1).
-        dep(nsubj, tok1, tok0).
-        dep(dobj, tok1, tok4).
-        dep(det, tok4, tok2).
-        dep(amod, tok4, tok3).
+        root(tok2).
+        dep(det, tok1, tok0).
+        dep(nsubj, tok2, tok1).
+        dep(cc, tok2, tok3).
+        dep(conj, tok2, tok4).
     \end{verbatim}
 \end{enumerate}
 \end{example} 
 
 \begin{figure}[h]
-\caption{Dependency graph of \emph{He threw a fast ball.}}
+\caption{Dependency graph of \emph{the batter swung and missed}.}
+\vspace{10pt}
 \centering
 \includegraphics[width=\textwidth]{solving-nlp-tasks-logically/example_dependency_tree.png}
 \label{example-dependency-graph}
@@ -211,323 +210,49 @@ However, the sentences:
     The batter hit the ball. The ball was hit by the batter.
 \end{verbatim}
 would not have similar representations.
-This representation drawback did not end up being a hurdle for the current dataset.
+This representation drawback was not a hurdle for the current dataset.
 
-\subsubsection{Encoding the Example Target}
+\subsubsection{Encoding the Goal}
 \label{encoding-the-example-target}
 
-
-After the example observation, it became clear that concept sentences contained only the words used in the premise.
-We could model the problem in this section as to whether or not we want to include the word in a concept sentence.
+By observing the examples, it became clear that atomic sentences only contained words used in the starting sentence.
+We could model the problem in this section as to whether or not we want to include the word in an atomic sentence.
 That goal is denoted with a predicate:
 \begin{verbatim}
-   in_generalised_sent(t).
+   in_atomic_sent(t).
 \end{verbatim}
 which represents that a token \verb+t+ is included in the concept sentence.
 The possibility of multiple concept sentences existing is modelled using multiple answer sets.
 \begin{example}
 \label{example-encoding-target}
-Encoding \textit{he threw a ball} as a generalisation of \textit{he threw a fast ball}:
+Encoding \textit{the batter missed} as atomisation of \textit{the batter swung and missed}
 
 From the previous example (\ref{logical-encoding-example}), we have:
 \begin{verbatim}
-    token(tok0, "he"). token(tok1, "threw"). token(tok2, "a"). 
-    token(tok3, "fast"). token(tok4, "ball").
+    token(tok0, "the"). token(tok1, "batter"). token(tok2, "swung").
+    token(tok3, "and"). token(tok4, "missed").
 \end{verbatim}
 So, we the example target is encoded as:
 \begin{verbatim}
-    in_generalised_sent(tok0). in_generalised_sent(tok1). 
-    in_generalised_sent(tok2). in_generalised_sent(tok3). 
+    in_atomic_sent(tok0). in_atomic_sent(tok1).
+    in_atomic_sent(tok4).
 \end{verbatim}
 
 \end{example}
 
-\subsection{Encoding the Learning Task}
-\label{encoding-the-learning-task}
-
-Learning a solution with ILP is different from determining a solution with Deep Learning.
-% INSERT reference to KR notes
-Inductive Logic Programming uses a different level of knowledge representation commitment than Deep Learning.
-Deep Learning approaches do not give any inductive bias to a machine. 
-The model must learn how to solve the problem from the data only. \\
-On the other hand, Inductive Logic Programming requires more human-generated knowledge representation.
-In particular, the logical structure is encoded to the learner, which is encouraged to find all possible theories within that structure and return the best one. 
-Because of this property, the Inductive Logic Programming paradigm can incorporate existing knowledge into the final solution, making the task easier to solve.
-
-The following subsection demonstrates how the \textbf{generalisation} task has been solved with ILASP \cite{RefWorks:RefID:18-law2020ilasp}, a state-of-the-art ILP system.
-
-% TODO: Alessandra feedback: describe a problem with learner first before going into a hand-crafted solution (after learning)
-% Argue that a hand-crafted solution should be something a human engineered ground truth model
-
-\subsubsection{Background Knowledge Construction}
-
-Here is the background knowledge used for the \textbf{generalisation} task.
-\begin{verbatim}
-token(T) :- root(T).
-token(T) :- dep(_, T, _).
-token(T) :- dep(_, _, T).
-label(L) :- dep(L, _, _).
-
-% there must be a token in any concept sentence
-:- #count{T : in_generalised_sent(T)}0.
-\end{verbatim}
-The first four rules define unary predicates used as types in language bias, while the final rule encodes that a generalised sentence should not be empty.
-
-\subsubsection{Language Bias}
-
-The construction of the language bias was done by first designing a hand-crafted ASP solution that tackles the task well, followed by encoding all predicates used in that solution to ILASP.
-The hand-crafted solution helps find the structure logical structure the learner should know.
-ILASP should then be able to find a better solution within those constraints.
-
-
-% TODO: Alessandra feedback: Justify a 0 1 boundary
-The problem is modelled as a choice of whether a particular token (word) should always be included or sometimes be included in the solution, which the following types of rules can represent.
-\begin{verbatim}
-in_generalised_sent(T) :- ...
-0 {in_generalised_sent(T) } 1 :- ...
-\end{verbatim}
-
-This gives rise to the following language bias:
-\begin{verbatim}
-#modeh(in_generalised_sent(var(token))).
-#modeha(in_generalised_sent(var(token))).
-
-#modeb(in_generalised_sent(var(token))).
-#modeb(root(var(token))).
-#modeb(dep(const(label), var(token), var(token)), (positive)).
-
-#bias("
-% Only allow rules 0 { in_generalised_sent(V1) } 1.
-% Eliminates all generated rules that where lhs of 
-% the curly brace is >= 1.
-:- in_head(_), lb(1).
-").
-
-% Disallow 2+ in_generalised_sent predicates occurring within {}.
-#disallow_multiple_head_variables.
-
-\end{verbatim}
-
-% TODO: Alessandra feedback: what would happen if we only had #pos examples.
-% TODO: Alessandra feedback: Argue that the size is because of the number of constants that we have. 
-\subsubsection{Example Encoding}
-\label{example-encoding}
-
-As mentioned, \textbf{generalisation} examples consist of a given sentence followed by 1 to many concept sentences.
-We need to convert those representations into ILASP examples.
-% INSERT: refer to background where a more formal definition is provided %
-ILASP allows defining two types of examples as outlined more formally in \ref{examples-in-ilasp}.
-\begin{itemize}
-    \item positive (\verb_#pos_) - an example which should be by at least one answer set.
-    \item negative (\verb_#neg_) - an example that any answer set should not extend.
-\end{itemize}
-
-Ideally, we want the solution learned by ILASP to produce the number of answer sets equal to the number of generalisations.
-Using these two constructs, we can define that we want exactly one answer set for each possible generalisation. \\
-It is done by creating a positive example for each sentence we wish to produce. 
-In addition, a negative example is produced with the \verb_goal_ predicate in the exclusion for each text sentence example.
-The \verb_goal_ predicate, defined only in the contexts of negative examples, is true if \verb+in_generalised_sent+ atoms correspond precisely to a positive example.
-
-
-\begin{example}
-Generating ILASP-compatible generalisation examples for \textit{"He threw a fast ball.", "He threw a ball. He threw a fast ball."}
-
-% INSERT reference to previous section %
-1. Convert the premise sentence to logical form, as shown in example \ref{logical-encoding-example}.
-
-2. For each possible generalisation, create a positive example. The context consists of predicates produced in step 1, while the inclusion/exclusion of appropriate \verb+in_generalised_sent+ tokens (example \ref{example-encoding-target}). The concept sentence \textit{He threw a ball.} yields the following example:
-\begin{verbatim}
-#pos(example_id@noise_penalty,
-{in_generalised_sent(tok0), in_generalised_sent(tok1), 
- in_generalised_sent(tok2), in_generalised_sent(tok4), 
- in_generalised_sent(tok5)},
-{in_generalised_sent(tok3)}, % tok3 = "fast"
-{
-% all the predicates generated in step 1
-}).
-\end{verbatim}
-
-3. The negative example is generated as follows:
-\begin{verbatim}
-#neg(example_id@noise_penalty,
-{ },
-{ goal },
-{
-% all the predicates generated in 1)
-
-% He threw a fast ball.
-goal :- in_generalised_sent(tok0), in_generalised_sent(tok1), 
-        in_generalised_sent(tok2), in_generalised_sent(tok3), 
-        in_generalised_sent(tok4), in_generalised_sent(tok5).
-% He threw a ball.
-goal :- in_generalised_sent(tok0), in_generalised_sent(tok1), 
-        in_generalised_sent(tok2), in_generalised_sent(tok4), 
-        in_generalised_sent(tok5)}, not in_generalised_sent(tok3).
-}).
-\end{verbatim}
-\end{example}
-
-All of the examples constructed have a \verb+noise_penalty=1+ as the \textbf{concept generalisation} examples may be noisy.
-
-
-% TODO: Alessandra feedback: scaling up should be a separate section
-\subsection{Managing Learning Scalability Constraints}
-
-% INSERT reference for this. %
-A considerable challenge with logic based learning systems, such as ILASP, is a lack of scalability when dealing with large scale AI problems compared to other forms of machine learning. \\
-For the \textbf{generalisation} task, two challenges needed to be mitigated: 
-\begin{itemize}
-    \item Lack of scalability w.r.t size of the hypothesis space -- This issue arises due to ILASP enumerating search space $S_M$ in full before finding a solution.
-    \item Extreme RAM consumption during task solving.
-\end{itemize}
-
-\subsubsection{Reducing the hypothesis space size}
-\label{reducing-the-hypothesis-space-size}
-
-For example, consider the following simplified language bias definition:
-\begin{verbatim}
-#modeh(in_generalised_sent(var(token))).
-#modeb(in_generalised_sent(var(token))).
-#modeb(root(var(token))).
-#modeb(dep(const(label), var(token), var(token))).
-
-... all the constant definitions ...
-\end{verbatim}
-
-% INSERT Might be benficial to include a table how each rule reduced the search space size.
-
-It took over 13 hours to generate an entire search space on a machine with an Intel Core i7 10510U 1.80GHz / 4.90GHz processor and 16 GiB of RAM.
-
-FastLAS \cite{RefWorks:RefID:19-law2020fastlas:} is a system designed to alleviate this particular constraint, but it can only deal with a restricted version of the learning task.
-Its inability to produce a solution with multiple answer set made it inapplicable for the current problem.
-
-% INSERT reference to Mark's website
-The scalability issue was instead tackled using meta-level definitions of the hypothesis space, which allow much greater flexibility than simple \textit{modeb}, \textit{modeh} statements. 
-They allow constraining how rules are generated using ASP syntax, removing rules that we do not want as a part of the learned solution.
-We always want to remove the rules whose body could never be satisfied.
-
-Here are some examples of they are utilised to restrict the search space presented in this section:
-\begin{verbatim}
-% Idea #1: Dep represents an arc in a tree. This allows 
-% cutting out rules which are impossible to be satisfied.
-    
-% It is impossible to have more than 1 root per example.
-:- #count{T : body(root(T))} > 1.
-
-% Trees cannot have a relation to itself.
-:- body(dep(_, X, X)).
-:- body(naf(dep(_, X, X))).
-
-% A tree is not symmetric.
-:- body(dep(_, X, Y)), body(dep(_, Y, X)).
-
-% No dependency can go to the root
-:- body(root(X)), body(dep(_, _, X)).
-
-% Idea #2: Only allow two dep rules to occur in a body
-% under certain conditions. 
-
-% Pairs of dependency tags which can co-occur.
-% Much smaller set of all possible pairs.
-dep_chain(prep, pobj).
-dep_chain(pobj, amod).
-...
-
-% Allow any rule with at most one dep predicate
-allowed_dep_rule :- #count{L, V4, V5 : body(dep(L, V4, V5))} <= 1.
-% Allow rule with two dep predicates if it is labels are white-listed
-% by dep_chains and tokens are chained too.
-allowed_dep_rule :- body(dep(L1, _, V2)), body(dep(L2, V2, _)), 
-                    dep_chain(L1, L2), 
-                    #count{L, V4, V5 : body(dep(L, V4, V5))} = 2.
-
-:- not allowed_dep_rule.
-
-% Idea 3: Remove rules that where simpler rules would suffice.
-
-% Rule with root(V3) where V3 is not used in any dep is not needed.
-% This predicate is trivially satisfied since every sentence has a 
-% root.
-:- body(root(X)), not body(dep(_, X, _)), not body(dep(_, _, X)), 
-   body(dep(_, _, _)).
-
-% If we have a in_generalised_sent predicate there must be some logic 
-% related to it.
-% This predicate is trivially satisfied otherwise, since the 
-% background requires that at least one must always exist.
-:- body(in_generalised_sent(X)), not body(dep(_, X, _)), 
-   not body(dep(_, _, X)).
-
-
-\end{verbatim}
-
-These modifications allowed the search space generation times to take less than a minute, starting from over 13 hours.
-The final search space consisted of only 3652 rules.
-
-
-% TODO: Alessandra feedback: avoid using OOM acrynoym - replace with out-of-memory/lack of memory
-\subsubsection{Avoiding OOM Errors}
-\label{avoiding-oom-errors}
-
-ILASP memory consumption is drastic even for the simpler of the two tasks solved logically.
-% INSERT memory graph drawn on batch machine over time for generalisation.
-The memory consumption graph over time is outlined in \ref{generalisation-memory-graph}.
-As seen in the plot, the graph is at around 15 GB of RAM at about 15-hour mark.
-So, to prevent the usual 16 GB machines from going out of memory, the execution is terminated after 15 hours, and the best solution found until that point is returned.
-This technique prevents the ILASP process from exceeding the memory limit while returning a high-quality result.
-
-% INSERT reference to PyLASP doc
-The aforementioned ILASP behaviour modification is possible through the use of PyLASP scripts.
-
-\begin{figure}[h]
-\caption{Comparison of the ILASP solution performance and memory consumption over time. A lower ILASP score corresponds to a better solution.}
-\centering
-\includegraphics[width=\textwidth]{solving-nlp-tasks-logically/generalisation_memory_vs_best_score.png}
-\label{generalisation-memory-graph}
-\end{figure}
-
-\subsection{Final Solution}
-
-The final solution is obtained by running ILASP with background, language\_bias, examples and the custom PyLASP script.
-In addition, all ILASP tasks were run with the \verb+--restarts+ flag, which can help reduce the running time of a program.
-
-% INSERT reference to evaluation part of this section
-The results of the performance of the \textbf{generalisation} task can be found in \ref{concept-generalisation-results}.
-
-
-% TODO: Alessandra feedback: argue that atomistaion is a 3-step process - generate logical form + apply rules + reconstruct the data
-% TODO: Alessandra feedback: add diagram with dependency trees - alessandra feedback-diagrams.png has a sketch
-
-% TODO: Alessandra feedback: add part 1 of the diagram from the introduction but now show the syntactic parse trees to showcase what we are doing in this part
-% TODO: Alessandra feedback: argue why the atomisation task is harder than the generalisation
-\section{Solving Atomisation Task}
-\label{solving-atomisation-task}
-
-The solution to the atomisation task has only been hand-crafted rather than learned.
-This section will highlight the idea behind the hand-crafted solution and demonstrate that ILASP is currently not scalable enough to learn a solution that is at least as good as the hand-crafted one.
-
-\subsection{Shared Encoding Logic with Generalisation}
-
-Due to the domain similarity of the two tasks, almost the entire Logical Encoding subsection (\ref{logical-encoding}) is fully applicable for the \textbf{atomisation} task with the following caveat:
-\begin{itemize}
-    % INSERT reference
-    \item Encoding the Learning Target (\ref{encoding-the-example-target}) --- The goal for the \textbf{atomisation} task is denoted with \verb+in_atomised_sent+.
-\end{itemize}
 
 % TODO: Alessandra feedback: summarise the rules in English first before encoding them symbolically
 % TODO: Alessandra feedback: include a table with two columns (predicate name, description) before which highlight what each of the predicates mean (so candidate_start is ...)
 \subsection{Hand-crafting the Atomisation Solution}
 \label{hand-crafting-the-atomisation-solution}
 
-Consider the following two sentences and the desired atomisation, as well as the dependency graphs of the premises (\ref{atomisation-examples}):
+Consider the following two sentences and the desired atomisation, as well as the dependency graphs of the premises (figure \ref{atomisation-examples}):
 \begin{lstlisting}
 the batter swung and the ball landed 
   $\rightarrow$ the batter swung. the ball landed.
 the batter swung and missed 
   $\rightarrow$ the batter swung. the batter missed.
 \end{lstlisting}
-
-% TODO Alessandra feedback: argued that there can only be one root in a dependency parse tree.
 
 \begin{figure}[h]
 \caption{Dependency graph of two sentences which need to be atomised}
@@ -541,7 +266,38 @@ The graph illustrates that the terms on both ends of the \verb_conj_ tag should 
 Determining splitting tags, tags whose words should be in distinct subsets, is the core idea of the hand-crafted solution.
 The words at the edges of these tags become starting points for generating sentences, which are constructed by adding tokens related to current \verb+in_atomic_sent+ tokens.
 
-Following such an approach, the following set of rules was constructed:
+The other rules are constructed to add the other necessary sentence tokens.
+These may sometimes involve "jumping over" the words at the edge of the splitting tags.
+For example, the sentence \verb+The batter swung and missed+ needs to add the associated subject to the \verb_missed_ token to construct a valid sentence.
+
+Following such an approach, the following set of rules was constructed.
+
+\begin{center}
+\centering
+\begin{tabular}{ |M{5cm}|M{9cm}|  }
+ \hline
+ \multicolumn{2}{|c|}{Summary of the predicates used} \\
+ \hline
+ Predicate name & Explanation \\
+ \hline
+ \hline
+ splitting\_tag(Tag) & Tag whose ends should be a part of different sentences \\
+ \hline
+ candidate\_start(Token) & Token at the edge of a splitting tag \\
+ \hline
+ in\_atomic\_sent(Token) & Token which should be included in the atomic sentence \\
+ \hline
+ root(Token) & Root token of a dependency tree \\
+ \hline
+ dep(Tag, Token, Token) & Arc of a dependency tree \\
+ \hline
+ adjacent\_subj & Represents whether the current sentence has a subject next to one its tokens \\
+ \hline
+ do\_not\_include(Tag) & Excludes children arcs with a specific Tag from an atomic sentence. \\
+ \hline
+\end{tabular}
+\end{center}
+
 \begin{lstlisting}
 
 % Capture tokens at the end of a splitting tag
@@ -606,7 +362,7 @@ in_atomic_sent(T) :- dep(C, T2, T), in_atomic_sent(T2), not do_not_include(C), n
 
 % Every atomic sentence should have a subject.
 % Include the subject of the first conjunct as a part of the second sentence if it does not contain its own.
-% The batter swung but missed the ball $rightarrow$ The batter swung. The batter missed the ball.
+% The batter swung but missed the ball $\rightarrow$ The batter swung. The batter missed the ball.
 in_atomic_sent(T) :- dep(nsubj, T1, T), dep(C, T1, T2), splitting_tag(C), in_atomic_sent(T2), not adjacent_subj.
 
 % There is no subject next to any currently included token
@@ -616,7 +372,350 @@ adjacent_subj :- dep(csubj, T1, T2), in_atomic_sent(T1).
 adjacent_subj :- dep(csubjpass, T1, T2), in_atomic_sent(T1).
 \end{lstlisting}
 
+
+\subsection{Full pipeline}
+
+The diagram of a whole process, starting from a given sentence to one or many atomic sentences, is shown in the figure \ref{test-architecture-diagram}.
+
+\begin{figure}[h]
+\caption{Dependency graph of two sentences which need to be atomised}
+\vspace{10pt}
+\centering
+\includegraphics[width=\textwidth]{solving-nlp-tasks-logically/Test architecture diagram.png}
+\label{test-architecture-diagram}
+\end{figure}
+
+We showcase how it works through an example.
+
+\begin{example}
+Generating all of the atomisations of the sentence \emph{The batter swung and missed.} at test time.
+
+The ASPGenerator module carries out the first two steps:
+
+1. Remove . and lowercase all the words in the sentence as a part of pre-processing. The string \emph{the batter swung and missed} is the result of the operations.
+
+2. Convert the sentence to the logical form, as shown by the example \ref{logical-encoding-example}.
+
+The result from step 2 is persisted to the file system as clingo \cite{RefWorks:RefID:22-clingo}, an answer set solver, is a command line tool.
+
+3. The answer set solver is applied with atoms and predicates from the hand-crafted solution (\ref{hand-crafting-the-atomisation-solution}) and the sentence encoding. The resulting clingo output is:
+\begin{verbatim}
+Answer set #1: 
+{in_atomic_sent(tok0), in_generalised_sent(tok1), 
+ in_atomic_sent(tok2)}.
+    
+Answer set #2:
+{in_atomic_sent(tok0), in_atomic_sent(tok1), 
+ in_atomic_sent(tok4)}.
+\end{verbatim}
+
+The Clingo Answer Parser does the last two steps:
+
+4. For each answer set generated, we reconstruct a sentence. 
+The sentence reconstruction is done by converting each \verb+in_atomic_sent+ token to the back to its string representation.
+They are then joined in the same order they originally appeared.
+
+For instance, the \verb_Answer set #2_ converts the tokens tok0 $\rightarrow$ "the", tok1 $\rightarrow$ "batter", tok4 $\rightarrow$ "missed".
+They are joined to a sentence \textit{the batter missed}
+
+5. Post-processing clean-up involving truecasing \ref{nlp-processing-techniques}, which determines the correct word capitalisation, and adding punctuation results in \emph{The batter swung.} and \emph{The batter missed.} \\
+\end{example}
+ 
+
+% TODO: Alessandra feedback: add part 2 of the diagram from the introduction but now show the syntactic parse trees to showcase what we are doing in this part
+% TODO: Alessandra feedback: talk about the definition of the learning task associated with the background.
+% TODO: Alessandra feedback: make background/language_bias \paragraph or something similar so that they don't appear in the table of contents
+\section{Solving Concept Generalisation}
+\label{solving-generalisation-task}
+
+The concept generalisation task aims to find a concept sentence from given an atomic sentence.
+Recall that a concept sentence is the one obtainable from an atomic sentence through syntactic manipulation which is true if the atomic sentence is.
+
+To tackle this task, we have learned a solution whose application is shown in \ref{generalisation-diagram}.
+
+\begin{figure}[h]
+\caption{Diagrammatic representation of the atomiser}
+\vspace{5pt}
+\centering
+\includegraphics[width=\textwidth]{solving-nlp-tasks-logically/Generalisation Diagram.png}
+\label{generalisation-diagram}
+\end{figure}
+
+The rule learning is done using ILASP (\ref{ilasp-background}), a state-of-the-art ILP system.
+
+% TODO: fix
+\subsection{Encoding the Learning Task}
+\label{encoding-the-learning-task}
+
+Learning a solution with ILP is different from determining a solution with Deep Learning.
+% INSERT reference to KR notes
+Inductive Logic Programming uses a different level of knowledge representation commitment than Deep Learning.
+Deep Learning approaches do not give any inductive bias to a machine. 
+The model must learn how to solve the problem from the data only. \\
+On the other hand, Inductive Logic Programming requires more human-generated knowledge representation.
+In particular, the logical structure is encoded to the learner, which is encouraged to find all possible theories within that structure and return the best one. 
+Because of this property, the Inductive Logic Programming paradigm can incorporate existing knowledge into the final solution, making the task easier to solve.
+
+
+\subsubsection{Encoding the Example Premise and Target}
+
+Generalisation examples consist of a given sentence followed by one to many sentences, which are ways in which the provided sentence can be generalised.
+For instance, here is a possible generalisation example:
+\begin{center}
+\setlength\parskip{0pt}
+\includegraphics[width=.8\linewidth]{solving-nlp-tasks-logically/raw-generalisation-example.png}
+\end{center}
+
+The example premise encoding is equivalent to the procedure for the atomisation task demonstrated in the example \ref{logical-encoding-example}.
+Moreover, the example target encoding is also equivalent to the atomisation procedure showcased in the example \ref{example-encoding-target}.
+The only difference is that the target is represented by the \verb+in_generalised_sent+ rather than the \verb+in_atomic_sent+ predicate.
+
+% TODO: Alessandra feedback: describe a problem with learner first before going into a hand-crafted solution (after learning)
+% Argue that a hand-crafted solution should be something a human engineered ground truth model
+
+\subsubsection{Background Knowledge Construction}
+
+Here is the background knowledge used for the generalisation task.
+\begin{verbatim}
+token(T) :- root(T).
+token(T) :- dep(_, T, _).
+token(T) :- dep(_, _, T).
+label(L) :- dep(L, _, _).
+
+% there must be a token in any concept sentence
+:- #count{T : in_generalised_sent(T)}0.
+\end{verbatim}
+The first four rules define unary predicates used as types in language bias, while the final rule encodes that a generalised sentence should not be empty.
+
+\subsubsection{Language Bias}
+
+% TODO: Alessandra feedback: Justify a 0 1 boundary
+The problem is modelled as a choice of whether a particular token (word) should always be included or sometimes be included in the solution, which the following types of rules can represent.
+\begin{verbatim}
+in_generalised_sent(T) :- ...
+0 {in_generalised_sent(T) } 1 :- ...
+\end{verbatim}
+
+This approach gives rise to the following language bias:
+\begin{verbatim}
+#modeh(in_generalised_sent(var(token))).
+#modeha(in_generalised_sent(var(token))).
+
+#modeb(in_generalised_sent(var(token))).
+#modeb(root(var(token))).
+#modeb(dep(const(label), var(token), var(token)), (positive)).
+
+#bias("
+% Only allow rules 0 { in_generalised_sent(V1) } 1.
+% Eliminates all generated rules that where lhs of 
+% the curly brace is >= 1.
+:- in_head(_), lb(1).
+").
+
+% Disallow 2+ in_generalised_sent predicates occurring within {}.
+#disallow_multiple_head_variables.
+
+\end{verbatim}
+
+% TODO: Alessandra feedback: what would happen if we only had #pos examples.
+% TODO: Alessandra feedback: Argue that the size is because of the number of constants that we have. 
+\subsubsection{Example Encoding}
+\label{example-encoding}
+
+As mentioned, generalisation examples consist of a given atomic sentence followed by 1 to many concept sentences.
+We need to convert those representations into ILASP examples.
+ILASP allows defining two types of examples as outlined in \ref{examples-in-ilasp}.
+\begin{itemize}
+    \item positive (\verb_#pos_) - an example which should be by at least one answer set.
+    \item negative (\verb_#neg_) - an example that any answer set should not extend.
+\end{itemize}
+
+Ideally, we want the solution learned by ILASP to produce the number of answer sets equal to the number of generalisations.
+Using these two constructs, we can define that we want precisely one answer set for each possible generalisation. \\
+It is done by creating a positive example for each sentence we wish to produce. 
+In addition, a negative example is produced with the \verb_goal_ predicate in the exclusion for each text sentence example.
+The \verb_goal_ predicate, defined only in the contexts of negative examples, is true if \verb+in_generalised_sent+ atoms correspond precisely to a positive example.
+
+
+\begin{example}
+Generating ILASP-compatible generalisation examples for \textit{"He threw a fast ball.", "He threw a ball. He threw a fast ball."}
+
+% INSERT reference to previous section %
+1. Convert the premise sentence to logical form (analogous to \ref{logical-encoding-example}), resulting in tokens:
+\begin{verbatim}
+    token(tok0, "he"). token(tok1, "threw").
+    token(tok2, "a"). token(tok3, "fast").
+    token(tok4, "ball"). root(tok1).
+    dep(nsubj, tok1, tok0). dep(dobj, tok1, tok4).
+    dep(det, tok4, tok2). dep(amod, tok4, tok3).
+\end{verbatim}
+
+as shown in the example \ref{logical-encoding-example}.
+
+2. For each possible generalisation, create a positive example. The context consists of predicates produced in step 1, while the inclusion/exclusion of appropriate \verb+in_generalised_sent+ tokens (analogous to \ref{example-encoding-target}). The concept sentence \textit{He threw a ball.} yields the following example:
+\begin{verbatim}
+#pos(example_id@noise_penalty,
+{in_generalised_sent(tok0), in_generalised_sent(tok1), 
+ in_generalised_sent(tok2), in_generalised_sent(tok4), 
+ in_generalised_sent(tok5)},
+{in_generalised_sent(tok3)}, % tok3 = "fast"
+{
+% all the predicates generated in step 1
+}).
+\end{verbatim}
+We would also construct a similar example for \textit{He threw a fast ball}.
+
+3. The negative example is generated as follows:
+\begin{verbatim}
+#neg(example_id@noise_penalty,
+{ },
+{ goal },
+{
+% all the predicates generated in 1)
+
+% He threw a fast ball.
+goal :- in_generalised_sent(tok0), in_generalised_sent(tok1), 
+        in_generalised_sent(tok2), in_generalised_sent(tok3), 
+        in_generalised_sent(tok4), in_generalised_sent(tok5).
+% He threw a ball.
+goal :- in_generalised_sent(tok0), in_generalised_sent(tok1), 
+        in_generalised_sent(tok2), in_generalised_sent(tok4), 
+        in_generalised_sent(tok5)}, not in_generalised_sent(tok3).
+}).
+\end{verbatim}
+\end{example}
+
+All the examples constructed have a \verb+noise_penalty=1+ as the concept generalisation examples may be noisy.
+
+\subsection{Final Solution}
+
+ILASP is not nearly scalable enough to solve the task presented in this section. Still, with the optimisations from the next section, it can return a high-performing solution.
+In addition, we ran all ILASP tasks with the \verb+--restarts+ flag, which can help reduce the running time of a program.
+
+The generalisation task performance is evaluated in \ref{concept-generalisation-results}.
+
+% TODO: Alessandra feedback: scaling up should be a separate section
+\section{Managing Learning Scalability Constraints}
+
+% INSERT reference for this. %
+A considerable challenge with logic-based learning systems, such as ILASP, is a lack of scalability when dealing with large-scale AI problems compared to other forms of machine learning. \\
+For the generalisation task, two challenges needed to be mitigated: 
+\begin{itemize}
+    \item Lack of scalability w.r.t size of the hypothesis space -- This issue arises due to ILASP enumerating search space $S_M$ in full before finding a solution.
+    \item Extreme RAM consumption during task solving.
+\end{itemize}
+
+\subsubsection{Reducing the hypothesis space size}
+\label{reducing-the-hypothesis-space-size}
+
+Since ILASP is not particularly scalable w.r.t to the size of the hypothesis space, the only option left was to reduce it.
+
+For example, consider the following simplified language bias definition:
+\begin{verbatim}
+#modeh(in_generalised_sent(var(token))).
+#modeb(in_generalised_sent(var(token))).
+#modeb(root(var(token))).
+#modeb(dep(const(label), var(token), var(token))).
+
+... all the constant definitions ...
+\end{verbatim}
+
+% INSERT Might be benficial to include a table how each rule reduced the search space size.
+
+It took over 13 hours to generate an entire search space on a machine with an Intel Core i7 10510U 1.80GHz / 4.90GHz processor and 16 GiB of RAM.
+
+FastLAS \cite{RefWorks:RefID:19-law2020fastlas:} is a system designed to alleviate this particular constraint, but it can only deal with a restricted version of the learning task.
+Its inability to deal with recursion made it inapplicable for the current problem.
+
+% INSERT reference to Mark's website https://doc.ilasp.com/specification/meta_asp_hypothesis_space.html
+The scalability issue was tackled using meta-level definitions of the hypothesis space, which allow much greater flexibility than simple \textit{modeb}, \textit{modeh} statements. 
+They allow constraining how rules are generated using ASP syntax, removing rules that we do not want as a part of the learned solution.
+We always want to remove the rules whose body could never be satisfied.
+
+Here are some examples of how they are utilised to restrict the generalisation search space:
+\begin{verbatim}
+% Idea #1: Dep represents an arc in a tree. This allows 
+% cutting out rules which are impossible to be satisfied.
+    
+% It is impossible to have more than 1 root per example.
+:- #count{T : body(root(T))} > 1.
+
+% Trees cannot have a relation to itself.
+:- body(dep(_, X, X)).
+:- body(naf(dep(_, X, X))).
+
+% A tree is not symmetric.
+:- body(dep(_, X, Y)), body(dep(_, Y, X)).
+
+% No dependency can go to the root
+:- body(root(X)), body(dep(_, _, X)).
+
+% Idea #2: Only allow two dep rules to occur in a body
+% under certain conditions. 
+
+% Pairs of dependency tags which can co-occur.
+% Much smaller set of all possible pairs.
+dep_chain(prep, pobj).
+dep_chain(pobj, amod).
+...
+
+% Allow any rule with at most one dep predicate
+allowed_dep_rule :- #count{L, V4, V5 : body(dep(L, V4, V5))} <= 1.
+% Allow rule with two dep predicates if it is labels are white-listed
+% by dep_chains and tokens are chained too.
+allowed_dep_rule :- body(dep(L1, _, V2)), body(dep(L2, V2, _)), 
+                    dep_chain(L1, L2), 
+                    #count{L, V4, V5 : body(dep(L, V4, V5))} = 2.
+
+:- not allowed_dep_rule.
+
+% Idea 3: Remove rules that where simpler rules would suffice.
+
+% Rule with root(V3) where V3 is not used in any dep is not needed.
+% This predicate is trivially satisfied since every sentence has a 
+% root.
+:- body(root(X)), not body(dep(_, X, _)), not body(dep(_, _, X)), 
+   body(dep(_, _, _)).
+
+% If we have a in_generalised_sent predicate there must be some logic 
+% related to it.
+% This predicate is trivially satisfied otherwise, since the 
+% background requires that at least one must always exist.
+:- body(in_generalised_sent(X)), not body(dep(_, X, _)), 
+   not body(dep(_, _, X)).
+
+
+\end{verbatim}
+
+These modifications allowed the search space generation times to take less than a minute, starting from over 13 hours.
+The final search space consisted of only 3652 rules.
+
+
+% TODO: Alessandra feedback: avoid using OOM acrynoym - replace with out-of-memory/lack of memory
+\subsubsection{Avoiding OOM Errors}
+\label{avoiding-oom-errors}
+
+\begin{figure}[h]
+\caption{Comparison of the ILASP solution performance and memory consumption over time. A lower ILASP score corresponds to a better solution.}
+\centering
+\includegraphics[width=\textwidth]{solving-nlp-tasks-logically/generalisation_memory_vs_best_score.png}
+\label{generalisation-memory-graph}
+\end{figure}
+
+ILASP memory consumption is drastic even for the simpler of the two tasks solved logically.
+% INSERT memory graph drawn on batch machine over time for generalisation.
+The memory consumption graph over time is outlined in \ref{generalisation-memory-graph}.
+As seen in the plot, the graph is around 15 GB of RAM at about the 15-hour mark.
+So, to prevent the usual 16 GB machines from going out of memory, the execution is terminated after 15 hours, and the best solution found until that point is returned.
+This technique prevents the ILASP process from exceeding the memory limit while returning a high-quality result.
+
+% INSERT reference to PyLASP doc https://ilasp.com/PyLASP
+The aforementioned ILASP behaviour modification is possible through the use of PyLASP scripts.
+
 \subsection{Atomisation Learning Challenges}
+
+Recall that the atomisation is only solved using the hand-crafted solution. 
+In this section, we highlight why it is not currently possible to learn a good atomisation solution with ILASP.
 
 We aimed to learn two things with ILASP for the atomisation learning task:
 \begin{enumerate}
@@ -645,8 +744,8 @@ Constructing the language bias by observing the hand-crafted solution gives resu
 ").
 \end{verbatim}
 
-The language bias additionally included a more aggressive alternative to the search space reduction method presented in \ref{reducing-the-hypothesis-space-size}, but nevertheless included all of the rules the hand-crafted solution uses. \\
-In addition, the examples were constructed in the same manner as in \ref{example-encoding}.
+The language bias additionally included a more aggressive alternative to the search space reduction method presented in \ref{reducing-the-hypothesis-space-size}, but had all of the rules the hand-crafted solution uses. \\
+In addition, we constructed the examples in the same manner as in \ref{example-encoding}.
 The learning was done on a specialised machine with 500 GiB of RAM, but it still required that an approximate solution be returned after some time (\ref{avoiding-oom-errors}).
 
 % TODO: Alessandra feedback: replace prior with size in the graph legend
@@ -655,153 +754,26 @@ The learning was done on a specialised machine with 500 GiB of RAM, but it still
 % TODO: Alessandra feedback: talk about ILASP score in background, reference in graph
 
 \begin{figure}[h]
-\caption{Comparison of the ILASP atomisation solution performance and memory consumption over time. The maximum prior penalty quantifies the maximum number of predicates ILASP can use in a solution. On the other hand, the example penalty outlines how many examples are not covered by the current solution. The dashed lines represent the values the hand-crafted solution would achieve had it been learned by ILASP.}
+\caption{Comparison of the ILASP atomisation solution performance and memory consumption over time. The dashed lines represent the values the hand-crafted solution would achieve had it been learned by ILASP.} 
 \centering
 \includegraphics[width=\textwidth]{solving-nlp-tasks-logically/atomisation_memory_vs_best_score.png}
 \label{atomisation-memory-graph}
 \end{figure}
 
-% INSERT reference Mark theiss% 
+% INSERT reference Mark thesis Inductive learning of answer set programs % 
 ILASP can theoretically find the optimal solution for any noisy task, and the search space represents the hand-crafted solution in full. 
 So, we expect the complete run of the task to produce at least as good of a solution as the hand-crafted one.
-However, this expectation does not hold within the memory and time constraints available for the \textbf{atomisation} task as shown in \ref{atomisation-memory-graph}.
+However, as shown in \ref{atomisation-memory-graph}, this expectation does not hold within the memory and time constraints available for the \textbf{atomisation} task.
 
-Observing the maximum prior penalty, we can see that the learner is stuck attempting simple solutions for the duration of the task run. 
-The hand-crafted solution uses 24 predicates, whereas the learner never attempted a solution with more than 14 predicates.
-This behaviour is quite unlike the one observed for the \textbf{generalisation} task and may even suggest a presence of a bug.
+Recall that in a noisy setting, the score ILASP minimises is the sum of the hypothesis length and uncovered example penalties.
+The hand-crafted solution would have had the score of 24 (hypothesis length) + 129 (uncovered example penalty) = 153.
+However, the graph \ref{atomisation-memory-graph} showcases that the learned solution never reaches those values.
+The maximum hypothesis length the ILASP allowed never went above 12. 
+Had the learner raised the hypothesis length limit to at least 24, it could have found a solution with a smaller or equal noise penalty to the hand-crafted one.
 
-\section{Implementation}
-
-This section presents the implementation design for the learning task and the dependencies used in this code.
-
-\subsection{Atomisation/generalisation procedure}
-
-% TODO: Alessandra feedback: Cut-up this diagram in two one for learning time and one for inference time. With this approach we can replace it to the appropriate report sections.
-% TODO: Alessandra feedback: Use ASP Encoder instead of ASP Generator
-% TODO: Alessandra feedback: Use Answer Set (Generalised Concept) instead of just Answer Set
-
-
-\begin{figure}[h]
-\caption{Simplified architecture for the concept generalisation part of the CoDEx pipeline.} 
-\centering
-\includegraphics[width=\textwidth]{solving-nlp-tasks-logically/simplified architecture diagram.png}
-\label{generalisation-architecture-diagram}
-\end{figure}
-
-
-The architecture diagram of the \textbf{concept generalisation} is shown in \ref{generalisation-architecture-diagram}.
-It can be divided into \textbf{learning} and the \textbf{application/evaluation} stage.
-The atomisation task uses an almost identical architecture as the \textbf{application/evaluation} stage, where the learned solution is replaced with a hand-crafted one. 
-The goal of the \textbf{learning} stage is to learn the hypothesis $H$, which will be able to generalise/atomise any sentence correctly.
-Each training example for the learning stage consists of the premise and generalisation sentences provided in CSV format.
-The raw examples are written in the following way:
-
-% TODO: Alessandra feedback: This would need to go to either generalisation or atomisation to get the idea of what the data is like.
-
-\begin{center}
-\setlength\parskip{0pt}
-\includegraphics[width=.8\linewidth]{solving-nlp-tasks-logically/raw-generalisation-example.png}
-\end{center}
-
-% INSERT spacy/AlunNLP reference
-The \textit{ASPGenerator} uses an NLP library to obtain the dependency graph of each sentence, used in the logical representation of an example.
-
-The example files (\textit{ILASP examples} in \ref{generalisation-architecture-diagram}) are persisted since ILASP can only be run as a command line tool.
-In addition, the ILASP examples can be split into multiple text files, commonly ten. 
-% INSERT condor reference
-The split of the files is used to run 10-fold cross validation experiments, parallelised using Condor, a batch processing system.
-% TODO: verify this - can be resolved immediately.
-The final learned solution (hypothesis $H$), as is the standard practice when doing cross validation, has been produced by training the model with all examples.
-
-% TODO: fix ASP Generator in image
-The \textbf{application/evaluation} uses the learned hypothesis in order to split the unknown sentences.
-In particular, the process consists of the following stages, visible in \ref{generalisation-architecture-diagram}:
-\begin{enumerate}
-    \item Conversion to the logical form --- The sentences are converted to the logical form in a manner equivalent to learning encoding. The same module carries out both operations.
-    
-    % INSERT reference clingo
-    \item Answer set solving --- A sentence in the logical form, learned hypothesis and background knowledge are passed to the Clingo answer set solver. Clingo will output all the answer sets of the provided program.
-    
-    \item Answer parsing --- Each answer set returned corresponds to one generalisation/atomisation sentence. For each \verb+in_generalised_sent+/\verb+in_atomic_sent+ token in an answer set, the actual word corresponding to that token is found. Words are joined in the same order as they appeared in the original sentence. Finally, post-processing techniques (\ref{post-processing-techniques}) are applied to the resulting string to fix possible grammatical issues. 
-\end{enumerate}
-
-\begin{example}
-Generating all of the generalisations of the sentence \emph{He threw a fast ball.} at test time.
-
-1. Remove . and lowercase all the words in the sentence as a part of pre-processing. The string \emph{he threw a fast ball} is the result of the operations.
-
-2. Convert the sentence to the logical form as shown by the \textbf{example \ref{logical-encoding-example}}.
-
-% INSERT clingo reference
-% INSERT next section reference
-3. The answer set solver clingo is applied with atoms and predicates existing in the background file, the learned solution file, and the generated predicates.
-The construction of the background and the learned solution file will be described in X.
-
-The resulting clingo output is:
-\begin{verbatim}
-Answer set #1:
-{in_generalised_sent(tok0), in_generalised_sent(tok1), 
- in_generalised_sent(tok2), in_generalised_sent(tok3), 
- in_generalised_sent(tok4), in_generalised_sent(tok5)}.
-    
-Answer set #2:
-{in_generalised_sent(tok0), in_generalised_sent(tok1), 
- in_generalised_sent(tok2), in_generalised_sent(tok4), 
- in_generalised_sent(tok5)}.
-\end{verbatim}
-
-4. For each answer set generated, we reconstruct a sentence. 
-The sentence reconstruction is done by converting each \verb+in_generalised_sent+ token to the back to its string representation.
-They are then joined in the same order they originally appeared.
-
-For instance, the \verb_Answer set #2_ converts the tokens with tok0 $\rightarrow$ "he", tok1 $\rightarrow$ "threw", tok2 $\rightarrow$ "a", tok4 $\rightarrow$ "ball".
-They are joined to a sentence \textit{he threw a ball}
-
-5. Post-processing clean-up involving truecasing and adding punctuation results in \emph{He threw a fast ball.} and \emph{He threw a ball.} \\
-\end{example}
- 
-\subsection{Post-processing techniques}
-\label{post-processing-techniques}
-
-% INSERT reference truecasing
-Two post-processing techniques are used to return a grammatically correct sentence: punctuation addition and truecasing.
-
-The \verb_punct_ tags are filtered before logical encoding since the task becomes easier without them.
-The punctuation addition adds the punctuation at the end of each solution sentence.
-The punctuation added to each atomised/generalised sentence is the same as the punctuation of the original sentence.
-
-% TODO: either reference stack overflow or find how I knew what I needed to capitalise.
-Truecasing determines the correct capitalisation where such information is unavailable.
-% INSERT https://www.scribbr.com/language-rules/capitalization-rules/
-As outlined in X, capitalisation is required for all proper nouns and first words of sentences. 
-The latter is simple to implement, while the former heavily relies on a part-of-speech tagger. 
-% INSERT reference Penn Treebank
-The implementation uses a POS tagger that assigns Penn Treebank tags to words which capture whether a noun is proper using \textit{NNP} (proper noun, singular) and \textit{NNPS} (proper noun, plural) tags.
-
-
-% Clear page so that the diagram can be inserted
-\clearpage 
-
-% Briefly mention dependencies
-% INSERT tags for all dependencies
-\subsection{Dependencies}
-
-% Modify this paragraph to talk about why we chose Answer Set Programming as a paradigm.
-
-A logic-based learning paradigm was chosen for this task due to the limited number of examples available.
-There were two required characteristics that the chosen ILP system needed to have: 
-\begin{enumerate}
-    \item It needed to be general enough to learn multiple solutions from a single premise.
-    \item It must handle noise since the dataset is unlikely to be 100\% accurate.
-\end{enumerate}
-ILASP \cite{RefWorks:RefID:18-law2020ilasp} is the most advanced system at the moment satisfying these properties.
-For this reason, we needed an answer set solver to use solutions ILASP produced. 
-Clingo \cite{RefWorks:RefID:22-clingo} is by far the most mature answer set solver at the moment.
-
-Any non-ASP code is written in \textbf{Python} due to the maturity of the NLP libraries for that language. \\
-In particular, we used the \textbf{Spacy} -- one of the most famous NLP libraries at the time of writing.
-It is used to determine part-of-speech tags of the tokens, create a dependency parse tree for a sentence and split sentences. \\
-Finally, \textbf{PyFakeFS}, a library which mocks the file system, was used for testing purposes.
+The learner is unlikely to attempt as complex of a solution before the memory runs out. 
+The memory consumption is quickly increasing while the maximum hypothesis score is staying flat in the graph \ref{atomisation-memory-graph}.
+This behaviour may even suggest a presence of a bug.
 
 \section{Evaluation}
 
@@ -827,7 +799,7 @@ $Set-Precision$ and $Set-Recall$ are defined in the similar manner as the $Preci
     \item $Set-Recall(A, B) = \frac{card(A \cap B)}{card(A)} = \frac{number \; of \; correctly \; predicted \; sentences}{number \; of \; correct \; sentences} $ 
 \end{itemize}
 where $card$ represents set cardinality, $A$ a set containing true solutions, while $B$ contains predicated solutions. 
-These two metrics help better understand the type of errors the model is making.
+These two metrics help better understand the type of errors the model makes.
 
 
 % Contains more sophisticated metrics if needed.
@@ -867,7 +839,8 @@ The results are summarised in the table below:
 \end{tabular}
 \end{center}
 
-Overall, the results are relatively high, with >85\% test average.
+Overall, the results are relatively high, with >85\% test Jaccard Index value.
+This result means that if a sentence was generalised, we expect more than 85\% of the sentences the model produces to be correct.
 Looking into more detail the types of mistakes the final model makes, they can be subdivided into three groups:
 
 % INSERT how often each occurs for one solution % 
@@ -878,7 +851,7 @@ Looking into more detail the types of mistakes the final model makes, they can b
     \item Parser errors --- The dependency parser is imperfect, which can be seen as the cause of some incorrect solutions. For example, a more accurate transformer parser labels \textit{foul ball} as a compound of nouns, whereas the CPU-optimised one used in the project believes \textit{foul ball} has an adjective. The reported LAS accuracy of the CPU-optimised parser is 0.9.
 \end{itemize}
 
-Finally, in all experiments, $Set$-$Precision$ and $Set$-$Recall$ were very similar, meaning that missing a solution and producing an incorrect one was similarly likely.
+Finally, in all experiments, $Set$-$Precision$ and $Set$-$Recall$ were similar, meaning that missing a solution and producing an incorrect one were similarly likely.
 
 
 \subsubsection{Comparison with the Manually-Engineered Solution}
@@ -929,7 +902,7 @@ It barely occurs in the MLB-V2E dataset, so both solutions fail to account for i
 \subsection{Atomisation}
 
 % INSERT reference to atomisation learning%
-There is no cross-validation evaluation of the ILASP output due to a poor solution being learned and high computation requirements.
+There is no cross-validation evaluation of the ILASP output due to a poorly learned solution and high computation requirements.
 However, the best-learned solution is still compared to the hand-crafted one to showcase how far it is from the manually generated one.
 To better showcase the poor performance of the learned solution, simple $H$, a hypothesis which always returns the sentence in full, is introduced.
 
@@ -973,6 +946,7 @@ The results averages and standard errors are presented in the tables below:
 
 The hand-crafted solution vastly outperforms the learned one, with a 45\% Jaccard Index improvement.
 Nevertheless, even the hand-crafted solution displays a lot of room for improvement as the Jaccard index value is at only 0.55.
+This result means that given a sentence, we expect almost every other atomic sentence the model produced for that sentence to be incorrect.
 
 A significant hurdle for the hand-crafted solution were the sentences with relative clauses. 
 For example, the sentence:
@@ -988,7 +962,7 @@ However, that dataset seems better suited for the \verb+splitting_tag+ logic use
 The sentences mainly contained conjunctions with sub-clauses rarely appearing.
 The poor result comes from splitting the sentences with multiple conjuncts, which were unaccounted for in the hand-crafted solution.
 
-The learned solution performs terribly on the out-of-domain dataset.
+On the other hand, the learned solution performs terribly on the out-of-domain dataset.
 There is no conclusive evidence that it consistently outperforms the simple hypothesis, as there is an overlap between the respective $Jaccard$-$Index$ values.
 
 Finally, in all experiments, $Set$-$Precision$ and $Set$-$Recall$ values were similar, meaning that missing a solution and producing an incorrect one was similarly likely.

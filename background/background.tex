@@ -3,6 +3,7 @@
 % Talk about ILP^opl whatever we are using (the latest one)
 
 \section{Answer Set Programming}
+\label{answer-set-programming}
 
 Answer Set Programming  \cite{RefWorks:RefID:1-lifschitz2008answer} is a form of declarative programming, with a Prolog-like syntax suitable for solving NP-hard search problems.
 However, it is based on a different computation mechanism than Prolog: stable model semantics \cite{RefWorks:RefID:21-fitting1992michael}.
@@ -101,6 +102,7 @@ In this manner, the constraints eliminate possible answer sets.
 % Touch upon non-monotonicity. Its non-Turing completeness.
 
 \section{Inductive Logic Programming}
+\label{ilasp-background}
 
 % What is Inductive Logic Programming
 Inductive Logic Programming \cite{RefWorks:RefID:42-muggleton1991inductive} is a field at an intersection of machine learning and logic programming.
@@ -126,14 +128,12 @@ Answer set X extends E iff set of inclusions is a subset of X ($E^{inc} \subsete
 
 
 The \textbf{language(inductive) bias} M, is a a pair $<M_h, M_b>$ which is used to construct the \textbf{search space} $S_M$ of a learning task.
-The rule of the form  \\$ h \;{:-} b_1, b_2, ..., b_n, not\; n_1, not\; n_2, ..., not\; n_o$ is in $S_M$ iff:
- 
- a) $h$ is compatible with $M_h$. This either means that $h$ is an atom compatible with $M_h$, an aggregate $lb\{h_1,.., h_m\}ub$ where each atom $h_i$ is compatible with $M_h$ or $h$ is empty.
- 
- b) $b_i$ and $n_i$ are compatible with $M_b$.
- 
- c) no variable does not appear in at least one element  of a positive body literal (the rule is safe). \\ 
- 
+The rule of the form  \\$ h \;\text{:-} \; b_1, b_2, ..., b_n, not\; n_1, not\; n_2, ..., not\; n_o$ is in $S_M$ iff:
+\begin{enumerate}
+    \item $h$ is compatible with $M_h$. This either means that $h$ is an atom compatible with $M_h$, an aggregate $lb\{h_1,.., h_m\}ub$ where each atom $h_i$ is compatible with $M_h$ or $h$ is empty.
+    \item $b_i$ and $n_i$ are compatible with $M_b$.
+    \item no variable does not appear in at least one element  of a positive body literal (the rule is safe). \\ 
+\end{enumerate}
 Understanding what compatible refers to in the previous definition is the easiest through the means of an example.
 
 \subsubsection{Inductive bias example}
@@ -159,29 +159,26 @@ Finally, the \#constant defines constants that can replace const functions.
 
 Let $S_M$ be the search space constructed from the language bias M, B background knowledge, $E^+$/$E^-$ set of positive/negative examples, T = $<B, S_M, E^+, E^->$ is the \textbf{learning from answer set task} ($ILP_{LAS}$) \cite{RefWorks:RefID:47-law2014inductive}.
 The hypothesis H is a set of inductive solution iff:
-
-1. It is a subset of search space $S_M$.
-
-2. For every negative example $e^-$, there is no answer set A of the program $B \cap H$ which extends that example.
-
-3. For every positive example $e^+$, there is an answer set A of the program $B \cap H$ which extends it.
-\\
+\begin{enumerate}
+    \item It is a subset of search space $S_M$.
+    \item For every negative example $e^-$, there is no answer set A of the program $B \cap H$ which extends that example.
+    \item For every positive example $e^+$, there is an answer set A of the program $B \cap H$ which extends it.
+\end{enumerate}
 
 We write $H \in ILP_{LAS}$ when $H$ satisfies the above criteria.
 Notice that the positive examples are bravely entailed while the negative are cautiously entailed.
-\\
 
 \subsubsection{Examples in ILASP}
 \label{examples-in-ilasp}
 
 \begin{verbatim}
-#pos(
+#pos(id1@1,
 {heads(c1)},
 {tails(c1)},
 {coin(c1).}
 ).
 
-#neg(
+#neg(id1@1
 {tails(c2), heads(c2)},
 {},
 {coin(c2).}
@@ -189,22 +186,32 @@ Notice that the positive examples are bravely entailed while the negative are ca
 \end{verbatim}
 
 The shown piece of code is a simple definition of examples in ILASP. 
-Both positive and negative take either 2 or 3 parameters. The first two are the set of inclusions $E^{inc}$ and the set of exclusions $E^{exc}$.
-The third optional parameter is the context $C_e$ of an example.
-The context of an example, $C_e$ is a set of rules and facts that are only relevant when explaining the example $e$.
-With this parameter, the agent tries to find hypothesis H such that an answer set of $B \cap H \cap C_e$ extends $e$ (for positive $e$).
-The analogue holds for negative examples. 
-A formal definition of the Context-dependent Learning from Ordered Answer Sets framework can be found in work by Broda et al., \cite{RefWorks:RefID:56-broda2016iterative} which introduced context-dependent examples to ILASP. \\
+Both positive and negative take either take the same set of parameters, id@\verb+noise_penalty+, the set of inclusions $E^{inc}$, the set of exclusions $E^{exc}$, and the context of an example ($C_e$).
+The context of an example, $C_e$ is a set of rules and facts that are only relevant when explaining the example $e$ \cite{RefWorks:RefID:56-broda2016iterative}.
+It is treated as an addition to the background just for that example.
+Moreover, the \verb+noise_penalty+ is an optional term introduced to deal with possibly noisy examples. 
+When it is included, ILASP may choose between covering an example and paying the \verb+noise_penalty+ for not covering the example.
+% INSERT Inductive learning of answer set programs from noisy examples
+The optimal solution then becomes the one which minimises the sum of all uncovered example penalties and the hypothesis length (X).
+This sum is also referred to the score/penalty of the ILASP solution.
 
-FastLAS is much more scalable with respect to hypothesis space size than ILASP, but the tasks it can solve.
-The syntax they use is practically identical, only that FastLAS is able to pick up constants from the background.
-The tasks it is able to solve are not as general as ILASP ones. 
-For example, the programs constructed will generate at most one answer set \cite{RefWorks:RefID:19-law2020fastlas:}.
+\subsubsection{FastLAS}
+\label{fastlas-background}
 
-with respect to the hypothesis 
-FastLAS \cite{RefWorks:RefID:19-law2020fastlas:}, a much faster alternative to ILASP, has been developed recently.
-Unfortunately, to get to the desired level of scale, the system operates with certain constraints which are too restrictive for this project.
-For example, the programs constructed will generate at most one answer set.
+FastLAS is much more scalable with respect to hypothesis space size than ILASP, but the tasks it can solve are less general than ILASP's.
+% INSERT Scalable Non-observational Predicate Learning in ASP
+Namely, the crucial reason for using both is FastLAS's inability to deal with tasks that have recursive rules.
+
+However, FastLAS also allows specifying domain-specific optimisation criteria unlike ILASP. 
+The hypothesis $H$ it returns is optimal with respect to a scoring function $S(H, T)$ where $T$ is a learning task.
+
+Not any scoring function can be defined.
+The scoring function $S(H, T)$ must be \textbf{decomposable}.
+It should should be possible to define it as a sum of scoring functions applied to each rule, i.e. $S(H, T) = \sum_{r \in H} S^{rule}(r, T)$. \\
+For example, the most common scoring function, and the one used by ILASP, uses hypothesis length ($S_{len}(H, T) = |H|$).
+The decomposition of that function is $S_{len}^{rule}(r, T) = |r|$ since the sum of rules lengths is equal to the sum of the entire hypothesis. \\
+
+To account for noisy example, a special scoring function that FastLAS allows is $S_{pen} + S$, where $S_{pen}$ is the sum of example penalties and $S$ is a decomposable scoring function.
 
 % Link to Tutorials for FastLas, ILASP
 
@@ -216,19 +223,14 @@ This section has a brief overview of the techniques applied to make the concept 
 The techniques presented in the following section are implemented by a popular library \emph{spacy} \cite{RefWorks:RefID:24-spacy} which has been utilised in this project. 
 The language model currently used throughout the project is \emph{en\_wb\_gl\_lg}, but a more performant option may replace it after further investigation.
 
-\subsection{Preprocessing Techniques}
+\subsection{Pre-processing/Post-processing Techniques}
+\label{nlp-processing-techniques}
 
 \textbf{Tokenisation} separates the given text into smaller units named \emph{tokens}. 
 It is common to split English text into words as tokens, as they carry meaning and are easy to extract.
 The \emph{spacy} library implements such behaviour with it additionally separating punctuation into separate tokens.\\
 
 \textbf{Sentence splitting} is a similar problem as tokenisation. It splits a text corpus into sentences before they are processed individually. \\
-
-% TODO think of better %
-\textbf{Word Normalisation} replaces words with a consistent form which greatly simplifies recognition of identical words.
-Some of the reasons different forms of words arise are capitalisation (Cat, cat -> cat), acronyms (U.S.A/USA/U S A -> USA) and spelling variants (chequebook/cheque book -> cheque book). 
-Most of the words can be modified by applying rule-based modifications, but there needs to be special handling of some words which have double meaning such as \emph{Turkey} (bird/country). \\
-
 
 % tag spacy PoS 
 \textbf{Part-of-speech tagging} attempts to determine which tag does a word have in the sentence.
@@ -239,16 +241,32 @@ The first occurrence of \emph{play} is a verb, and the second is a \emph{noun}.
 The spacy library uses neural networks and statistical models to determine which tokens the library should assign which POS tag \cite{RefWorks:RefID:25-spacy}.
 The classifier which spacy uses has a very high accuracy for the English language, with accuracy between 97-98\% depending on the model \cite{RefWorks:RefID:26-spacy}.
 
+% INSERT reference Truecasing paper
+\textbf{Truecasing} X is a process for determining the appropriate capitalisation of a word where such information is available. In English language, 
+% INSERT https://www.scribbr.com/language-rules/capitalization-rules/
+As outlined in X, capitalisation is required for all proper nouns and first words of sentences. 
+The latter is simple to implement, while the former heavily relies on a part-of-speech tagger. 
+% INSERT reference Penn Treebank
+With spacy library, a POS tagger that assigns Penn Treebank tags to words can capture whether a noun is proper using \textit{NNP} (proper noun, singular) and \textit{NNPS} (proper noun, plural) tags.
+
 
 % http://nlpprogress.com/english/dependency_parsing.html - tracks state of the art
 
 \subsection{Parsing}
 
 \subsubsection{Dependency Parsing}
+\label{dependency-parsing}
 
 Dependency Parsing is a form of parsing that attempts to determine words' dependency within a sentence \cite{RefWorks:RefID:28-jurafsky2014speech}.
 
-The resulting structure obtained is a dependency parse tree.
+\begin{figure}[h]
+\caption{Dependency graph of \emph{The fielder caught the ball.}}
+\centering
+\includegraphics[width=\textwidth]{background/dependency_graph.png}
+\label{dependency-graph}
+\end{figure}
+
+The resulting structure obtained is a dependency parse tree, which is an acyclic and rooted because it is a tree.
 An example of a dependency parse tree can be seen in \ref{dependency-graph}.
 This structure enables determining which purpose does a word serve in a sentence.
 To illustrate why determining what purpose a word serves in a sentence may be helpful, here is a predicate/subject refresher:
@@ -266,13 +284,6 @@ The former validates how well a word is assigned to its head and whether a corre
 The latter score checks whether the head is assigned correctly.
 Spacy's dependency parsing system slightly trails behind the state of the art approaches at the moment, with its UAS and LAS being at 95.1\% and 93.7\%, respectively. 
 Mniri et al. \cite{RefWorks:RefID:29-mrini2019rethinking} developed the current state of the art model, with UAS/LAS scores at 97.4\% and 96.3\%.
-
-\begin{figure}[h]
-\caption{Dependency graph of \emph{The fielder caught the ball.}}
-\centering
-\includegraphics[width=\textwidth]{background/dependency_graph.png}
-\label{dependency-graph}
-\end{figure}
 
 \subsubsection{Constituency Parsing}
 

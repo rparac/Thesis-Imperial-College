@@ -1,30 +1,29 @@
 \chapter{Related Work}
 
-% TODO: Alessandra feedback: Check the task we are doing is a form of semantic entailment, if it is pick 1/2 paper explaining it.
-
 \section{Video Classification}
+\label{video-classification}
 
-Even though the work on video classification is not closely related to this thesis's contributions, it should serve as a performance benchmark of the entire system.
+Even though the work on end-to-end video classification is not closely related to this thesis's contributions, different neural network architectures significantly impact the concept bottleneck performance.
 
-There are a few popular datasets for video classification out there, such as YouTube-8M \cite{RefWorks:RefID:10-abu-el-haija2016youtube-8m:} and Kinetics \cite{RefWorks:RefID:9-carreira2017quo}.
+There are a few popular datasets for video classification benchmarks out there, such as YouTube-8M \cite{RefWorks:RefID:10-abu-el-haija2016youtube-8m:} and Kinetics \cite{RefWorks:RefID:9-carreira2017quo}.
 The YouTube-8M \cite{RefWorks:RefID:10-abu-el-haija2016youtube-8m:} is an extensive benchmark for general video classification with around 8 million clips and 4800 visual entities.
 Mao et al. \cite{RefWorks:RefID:4-mao2019hierarchical} achieved very high performance on the YouTube-8M dataset using a deep convolutional graph neural network and a multi-level feature extractor.
 Kinetics-700 \cite{RefWorks:RefID:14-carreira2019short} dataset is the latest version of the popular Kinetics dataset, which contains 700 human action classes and around 650000 video clips.
-The top-performing model at the dataset has been designed by Yan et al. which uses Multiview Transformers for Video Recognition. 
+Yan et al. designed the top-performing model for the dataset, \cite{RefWorks:RefID:8-yan2022multiview} which uses Multiview Transformers for Video Recognition. 
 The core idea of this approach is to input multiple different "views" of an input video into a transformer model to achieve better results.
-This approach resulted in a model with an accuracy of 82.2\% on the Kinetics-700 dataset with the top-5 accuracy of 95.7\%.
+This approach resulted in a model with a top-1 accuracy of 82.2\% and a top-5 accuracy of 95.7\% on the Kinetics-700 dataset.
 
-YouTube-8M and Kinetics datasets are somewhat different to the dataset the majority of the project will address.
+YouTube-8M and Kinetics datasets are somewhat different from the dataset most of the project will address.
 The MLB-V2E sequences look very similar, given that all of the sequences start with a pitcher throwing a ball.
 
 A dataset much more closely related to our problem is the MLB-YouTube \cite{RefWorks:RefID:3-piergiovanni2018fine-grained} dataset.
-The segmented video classification part of this dataset is the base for the MLB-V2E \cite{RefWorks:RefID:16-2021automatic} dataset which also includes crowd-sourced explanations. 
-The MLB-YouTube dataset is quite different from the alternatives discussed in this section because the scene is very similar in all videos, only a single camera view is used, and the activity itself is only different because of the movement of one person.
-The MLB-YouTube paper validates the InceptionV3 \cite{RefWorks:RefID:49-szegedy2016rethinking} and I3D \cite{RefWorks:RefID:9-carreira2017quo} networks performance on the constructed datasets shown in the table below.
-These results should serve as a guide for the results of this project.
+The segmented video classification part of this dataset is the base for the MLB-V2E \cite{RefWorks:RefID:16-2021automatic} dataset, which also includes crowd-sourced explanations. 
+The scenes in the MLB-YouTube dataset are very similar to each other as only a single camera view is used, and the activity itself is only different because of the movement of one person.
+
+The MLB-YouTube paper validates the performance of InceptionV3 \cite{RefWorks:RefID:49-szegedy2016rethinking} and I3D \cite{RefWorks:RefID:9-carreira2017quo} networks on the constructed datasets shown in the table below.
 
 \begin{center}
-\begin{tabular}{ |p{2cm}|p{1cm} p{1cm} p{1cm} p{1cm} p{1cm} p{1cm} p{1cm} p{1cm}|  }
+\begin{tabular}{ |M{3cm}|M{1cm} M{1cm} M{1cm} M{1cm} M{1cm} M{1cm} M{1cm} M{1cm}|  }
  \hline
  \multicolumn{9}{|c|}{Per-class average precision for the multi-class baseball classification} \\
  \hline
@@ -34,25 +33,25 @@ These results should serve as a guide for the results of this project.
  InceptionV3 & 66.9 & 93.9 & 90.3 & 90.9 & 60.7 & 89.7 & 12.4 & 29.2 \\
  I3D & 62.5 & 91.3 & 88.5 & 86.5 & 47.3 & 75.9 & 16.2 & 21.0 \\
  \hline
- 
 \end{tabular}
 \label{inclusion-exclusion-rules}
 \end{center}
+The results suggest that InceptionV3-like architecture is a great candidate to improve upon the NN performance presented in Chapter \ref{concept-bottleneck-pipeline}.
 
 
 \section{Definition of Concept in Other Settings}
 
 There are different angles to the definition of concepts in various works.
-As mentioned, this project defines a concept as a syntactic generalisation of an atomic sentence.
+This project defines a concept as a syntactic generalisation of an atomic sentence (defined in \ref{sentence-type-definitions}).
 However, this approach is not common in other works which do concept extraction.
 
 
-Formal concept analysis \cite{RefWorks:RefID:31-ganter2012formal} is a method for knowledge representation based on the lattice theory which can be used to extract hierarchical concepts.
+Formal concept analysis \cite{RefWorks:RefID:31-ganter2012formal} is a method for knowledge representation based on the lattice theory, which can be used to extract hierarchical concepts.
 It defines two fundamental notions: a formal context and a formal concept. 
-Formal context K := (G, M, I) consists of a set of objects G, set of attributes M and relation I on (G, M).
+Formal context K := (G, M, I) consists of a set of objects G, a set of attributes M and relation I on (G, M).
 If (g, m) $\in$ I, object g has attribute m.
 Using these attributes, set A$' $ is defined containing all attributes common to the objects in a set of objects A.
-Additionally, set B$' $ contains objects that have all attributes in the set of relations B.
+Additionally, set B$' $ contains objects with all attributes in the set of relations B.
 From these definitions, formal concept of context (G, M, I) is defined as a pair (A, B) such that A $\subseteq$ G, B $\subseteq$ M, B$' $ = A and A$' $ = B.
 
 The Formal Concept Analysis with text analysis is mainly used to construct the concept hierarchy, where a concept refers to a phrase containing two words.
@@ -62,7 +61,7 @@ Moreover, the Formal Concept Analysis is used by Anoop et al. \cite{RefWorks:Ref
 The authors manually extract stemmed noun phrases as key phrases and use indications such as "is-a" to generate a formal context table.
 This table is then used to extract hierarchical concepts.
 
-On the other hand, TaxoLearn \cite{RefWorks:RefID:34-dietz2012taxolearn} by Dietz et al. does not use Formal Concept Analysis but also extracts noun phrases as concepts. The relevance of noun phrases is checked by computing how often they appear in a particular context compared to other contexts. It also uses a hierarchical clustering algorithm to construct a taxonomy.
+On the other hand, TaxoLearn \cite{RefWorks:RefID:34-dietz2012taxolearn} by Dietz et al. does not use Formal Concept Analysis but also extracts noun phrases as concepts. The relevance of noun phrases is checked by computing how often they appear in a particular context compared to others. TaxoLearn also uses a hierarchical clustering algorithm to construct a taxonomy.
 
 Moreover, approaches such as the one by Koh et al. \cite{RefWorks:RefID:35-koh2020concept} define concepts as properties that the image may have. These properties need to be provided beforehand.
 
@@ -71,26 +70,29 @@ Finally, work such as the one by Fan et al. \cite{RefWorks:RefID:50-fan2004seman
 
 \section{Concept-Based Explanations for Images and Text}
 
-Concept-based explanations for images and text attempts is a more straightforward related problem.
-Koh et al. \cite{RefWorks:RefID:35-koh2020concept} predict a set of pre-labelled concepts which they use to make a final classification.
-The pipeline by Koh et al. is similar to the pipeline that will be used in this project, just that the concepts are automatically extracted instead of provided.
-Yeh et al. \cite{RefWorks:RefID:36-yeh2019completeness-aware} propose a method that automatically extracts sets of pixels from an image that represent valuable concepts.
-Similarly, Ghorbani et al. \cite{RefWorks:RefID:37-ghorbani2019automatic} propose another method that automatically extracts a set of visual concepts which are meaningful to humans.
-All outlined methods are based on visual concept extraction, unlike this project's concept extraction, which will mainly focus on the events/actions in the baseball video sequence.
+Concept-based explanations for images and text is a more straightforward related problem.
+Koh et al. \cite{RefWorks:RefID:35-koh2020concept} designed the original concept bottleneck pipeline, which predicts a set of pre-labelled human-engineered concepts before the final label.
+At test time, a trained network predicts both the final label and the concepts, which one could then use to explain the output class.
+The model by Koh et al. inspired this project, which automatically mines concepts from text explanations rather than using a set of provided ones.
+Yeh et al. \cite{RefWorks:RefID:36-yeh2019completeness-aware} propose a method that automatically extracts sets of pixels from an image representing valuable concepts.
+Similarly, Ghorbani et al. \cite{RefWorks:RefID:37-ghorbani2019automatic} suggest another method that automatically captures a set of visual concepts which are meaningful to humans.
+All outlined methods are based on image concept extraction, unlike this project's concept extraction, which mainly focuses on the events/actions in a baseball video sequence.
 
 
 \section{Video Explanation}
 
-Another related problem is that of Video Explanations. This project may even explore it at a later stage within the context of a concept extraction pipeline.
+Another related problem is that of Video Explanations. 
+We can generate the explanations for the MLB-V2E dataset using the logic-based classification (Chapter \ref{logic-based-classification}), but those explanations aim to describe the outcome rather than the video itself.
 
-One famous dataset for video understanding is the MSR-VTT dataset \cite{RefWorks:RefID:40-jun2016msr-vtt:}. It is a large scale dataset with more than 10000 video clips in 257 popular categories of a video search engine.
-Each video is annotated with roughly 20 sentences. 
-A few different approaches for tackling this issue are presented as viable options in the paper, such as 2D Convolutions, 3D Convolutions, and RNNs.
+One famous dataset for video understanding is the MSR-VTT dataset \cite{RefWorks:RefID:40-jun2016msr-vtt:}. 
+It is a large-scale dataset with more than 10000 video clips in 257 popular categories of a video search engine.
+Each clip is annotated with roughly 20 sentences. 
+A few approaches to tackling this issue are presented as viable options in the MSR-VTT paper, such as 2D Convolutions, 3D Convolutions, and RNNs.
 One of the most performant methods on this dataset is CLIP2TV \cite{RefWorks:RefID:41-gao2021clip2tv:}, which utilises transformer-based techniques for both video and text representation.
 
-
-The authors of the MLB-V2E \cite{RefWorks:RefID:16-2021automatic} have also constructed the MSR-V2E \cite{RefWorks:RefID:16-2021automatic} dataset, which uses the clips made available by the MSR-VTT and provides new classification labels and explanations.
-This dataset will likely be used for the evaluation of this project.
+The authors of the MLB-V2E have also constructed the MSR-V2E dataset \cite{RefWorks:RefID:16-2021automatic}, which uses the clips made available by the MSR-VTT and provides new classification labels and explanations.
+This dataset was also explored by the inherited work (\ref{inherited-work}), obtaining similar results.
+Instead, we focused on the dataset with a different modality in an attempt to showcase the generality of the new concept bottleneck model.
 
 \section{Semantic Concept Video Classification}
 
@@ -98,13 +100,13 @@ Semantic Concept Video Classification attempts to predict a set of predefined co
 Predicting a set of predefined concepts from a video is closely related to a part of the pipeline in this project, which indicates which extracted concepts occur before predicting the outcome. 
 
 The work by Fan et al. \cite{RefWorks:RefID:50-fan2004semantic} tries to predict semantically defined concepts by medical experts.
-The paper proposes using salient objects, which are visually-distinguishable video components that human semantics understands, to model these semantical concepts.
+The paper proposes using salient objects, visually-distinguishable video components that human semantics understands, to model these semantical concepts.
 Examples of notions salient objects attempt to represent are a face, voice, or a lecture slide.
 Despite its benefits, the semantics of salient objects is quite simple, and it does not model relationships that happen over multiple frames in a video.
 Newer work by Fan et al. \cite{RefWorks:RefID:51-jianping2007incorporating} also incorporates the possibility of a hierarchical concept classification. The approach also predicts atomic video concepts before constructing the higher-level ones and existing concept ontology.
 
 Assari et al. \cite{RefWorks:RefID:52-assari2014video} represent a video by the co-occurrence of the semantic concepts before applying a classifier.
-The concepts in this work are also predefined, but they represent a set of events rather than a set of objects.
+The concepts in the work by Assari et al. are also predefined, but they represent a set of events rather than objects.
 
 
 \section{Probabilistic Rule Learning}
@@ -112,31 +114,31 @@ The concepts in this work are also predefined, but they represent a set of event
 The approach for learning presented in Chapter \ref{logic-based-classification} learns rules whilst accounting for uncertainty.
 
 % INSERT Probabilistic INDUCTIVE Logic programming
-This associated to the field of Probabilistic Inductive Logic Programming(X).
+Learning logical rules in an uncertain setting is closely related to the field of Probabilistic Inductive Logic Programming(X).
 % INSERT INDUCTIVE Logic Programming Luc de Raet
-The standard ILP aims to find a hypothesis $H$ such that the $covers(e, H, B)$ is true for all positive examples while false for all negative.
-The most popular way for defining that approach is in terms of the semantic entailment relation, i.e. $covert(e, H, B) = true$ iff $B \bigcup H \vDash e$
+The standard ILP aims to find a hypothesis $H$ such that the $covers(e, H, B)$ is true for all positive examples and false for all negative.
+The most popular way for defining $covers$ is in terms of the semantic entailment relation, i.e. $covert(e, H, B) = true$ iff $B \cup H \vDash e$.
 The Probabilistic ILP framework modifies the covers $covers(e, H, B)$ relation such that it becomes the probability that an example $e$ is covered given the hypothesis $H$ and background knowledge $B$.
 
 % INSERT Probabilistic Rule Learning
-Focusing on the Probabilistic Rule Learning, ProbFOIL (X) is a system which targets ProbLog (X), a Prolog-like language with further allows clasues to be true with some probability p.
-Its examples are a set of facts associated with target probabilities that rule learner should strive towards.
+Focusing on the Probabilistic Rule Learning, ProbFOIL (X) is a system which targets ProbLog (X), a Prolog-like language which further allows clauses to be valid with some probability p.
+ProbFOIL examples consist of facts associated with target probabilities that the rule-learner aims to achieve.
 % INSERT Inducing probabilistic relational rules from probabilistic examples
-A further extension of this system, ProbFOIL+ (X) makes it possible to learn probability values and allows specifying the space of the possible clauses.
+A further extension of this system, ProbFOIL$^+$ (X), makes it possible to learn probability values and allows specifying the space of the possible clauses the system should search within.
 % INSERT Towards Structure Learning under the Credal Semantics
-An another extension of ProbFOIL is presented in X, where background knowledge can have negative loops.
+Another extension of ProbFOIL is presented in X, where background knowledge can have negative loops.
 
-However, all of these approaches are not nearly scalable enough for our problem having mostly been evaluated on small sets of examples.
-In addition, all of those allow specifying the target probability for an example, which is not a needed requirement in the context of this project.
-It needs to produce as likely of a solution as possible, which for the ProbFOIL-like learners would mean that each example would have target probability of 1.
+However, all of these approaches are not nearly scalable enough for the problem in this thesis, mainly having been evaluated on small sets of examples.
+In addition, the presented approaches allow specifying the target probability for an example, which is not a requirement for this project.
+We need to produce as likely of a solution as possible, which for the ProbFOIL-like learners would mean that each example should have a target probability of 1.
 
 % INSERT reference NSL: ... AND FF-NSL: ...
 A much more scalable approach with a similar goal is presented by Cunnington et al. in NSL and FF-NSL papers.
 It is related to the previously mentioned approaches as it also aims to determine a hypothesis given a set of probabilistic facts.
-Cunnington et al. wish to cover a set of examples generated by the neural network, which for that reason may be incorrect.
-Each example may consist of facts generated by multiple NN predictions.
-Their probabilities are combined into one example probability using G\"{o}del's t-norms, i.e. the probability of an example is the minimum of prediction probabilities.
-In order to learn a hypothesis, the FF-NSL framework utilises existing ILASP \cite{RefWorks:RefID:54-ilasp} and FastLAS \cite{RefWorks:RefID:19-law2020fastlas:} ILP systems.
-FF-NSL accounts for a probability an example may have using the noise penalties these two systems provide.
-A penalty is assigned such that it is proportional to the probability that an example may have, determined in an empirical manner.
-With this approach, Cunnington et al. specify the importance for each example to be satisfied using the noise penalties.
+Cunnington et al. wish to cover a set of examples generated by the neural network, whose correctness depends on the quality of the NN predictions.
+Each example consists of facts generated by multiple NN predictions.
+Maximum prediction probabilities of an example are combined into one example probability using G\"{o}del's t-norms, i.e. the probability of an example is the minimum of prediction probabilities.
+The FF-NSL framework utilises existing ILASP \cite{RefWorks:RefID:54-ilasp} and FastLAS \cite{RefWorks:RefID:19-law2020fastlas:} ILP systems to learn a hypothesis.
+To account for the example probability, it uses noise penalties these two systems provide.
+A penalty assigned is proportional to the example probability, with the exact value determined empirically.
+With this approach, Cunnington et al. specify the importance of satisfying each example using the noise penalties.

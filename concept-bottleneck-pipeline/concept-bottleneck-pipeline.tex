@@ -311,6 +311,8 @@ The precision values are still less than 0.5, whose improvement would greatly be
 
 \subsection{Explainability of the Labels}
 
+% INSERT appendix baseball rules quickly
+
 
 The main reason we use the concept bottleneck pipeline is to allow interpretation of final labels using the intermediate concepts.
 To do so, we compare the concept values after attention as human subjects prefer them over all alternatives in almost 70\% of the cases in \cite{RefWorks:RefID:16-2021automatic}.
@@ -323,13 +325,13 @@ Unfortunately, due to a lack of resources, we have not been able to repeat the M
 Instead, we only discuss three randomly selected test examples and qualitatively compare the old and new concept predictions for them: \\
 
 
-% Label 1: curr_point = 58, id: WSYKJR5QCQ5K
-Sourced explanation 1: \emph{The ball was then fielded and thrown to first base before the batter could make it there. This resulted in an out.}  \\
-True label 1: play.
+% Label 1: curr_point = 78, id: KP4EFXZPM12B
+Sourced explanation 1: \emph{The batter swung the bat and hit it into foul territory. This was called a foul ball by the ump}. \\
+True label 1: foul.
 
 The results are shown in \ref{concepts-results-1}.
-The video consisted of a batter hitting a ground ball, which the outfielder threw to the first base, where the base outfielder caught it.
-Both networks accurately predict this sequence as a strike.
+The video consisted of a batter hitting the ball hitting a ball in the air behind him in the foul territory.
+Both networks accurately predict this sequence as a foul.
 
 \begin{figure}[h]
 \caption{Most relevant concepts for example 1 along with their concept scores. The LHS shows the ones predicted by the old concept bottleneck, while the RHS is predicted by the new one.}
@@ -338,78 +340,91 @@ Both networks accurately predict this sequence as a strike.
 \label{concepts-results-1}
 \end{figure}
 
-For the new concept bottleneck network, almost predicted concepts seem correct.
-Only the \emph{The batter hit the ball in the air} is not correct.
-There also is some redundancy in the outputs. 
-For example, sentences \emph{The batter hit a ground ball} and \emph{The batter hit the ball on the ground} mean the same thing.
-The grouping stage should merge these cases. \\
-On the other hand, the old concept bottleneck model performs worse.
-The concept \emph{It was caught} was the only one correctly predicted. 
-However, that concept on its own can be very misleading on its own and made to believe that the catcher caught the ball rather than an outfielder.
-In a case where the catcher gets the ball, the final label is usually a strike.
-The other sentence \emph{The ball went} is unclear about what it describes. \\
+For the new concept bottleneck network, all predicted concepts are correct.
+The batter has indeed made contact, the ball went into the foul territory and was indeed a foul ball.
+They describe well all the events that happened.
+On the other hand, old concepts also perform well in this case.
+One should be able determine that the final label should be foul from the concepts. 
+The concept \emph{it was outside of strike zone} is wrong. 
+If that piece of information is indeed correct, the true label would have been ball instead of the foul.
+In addition, \emph{it was out of bounds}, \emph{it did not land in the field of play}, \emph{it was out of field of play} all capture the same piece of information.
+That the ball landed outside of the allowed territory.
+It may be sufficient to only present one such concept.
 
-% Label 2: curr_point = 73, id: X1J640ZYKXD2
-Sourced explanation 2: \emph{Then the outfielder caught it.} \\
-True label 2: out
+Although both concepts are good enough to accurately predict the final label, the new one would usually be preferred.
+It is not only because the old concept bottleneck presents an incorrect sentence, but also because the new concepts seem much clearer.
+The user does not need to infer what "it" is referring to. \\
+
+% Label 2: curr_point = 122, id: SAGXX461QCAB
+Sourced explanation 2: \emph{The batter hit it in play and it was not caught.} \\
+True label 2: play
 
 \begin{figure}[h]
-\caption{Comparison of the concept prediction precision score by a NN using old and new concepts in the intermediate layer.}
+\caption{Most relevant concepts for example 2 along with their concept scores. The LHS shows the ones predicted by the old concept bottleneck, while the RHS is predicted by the new one.}
 \centering
 \includegraphics[width=\textwidth]{concept-bottleneck-pipeline/expalantions_concepts2.png}
 \label{concepts-results-2}
 \end{figure}
 
 The results are shown in \ref{concepts-results-2}.
-The video in explanation 2 consisted of the batter hitting the ball in the air, which was caught by an outfielder before hitting the ground.
-Both networks accurately predict this sequence as an out.
+The video in explanation 2 showed a batter hitting a fly ball which an outfielder caught after it hit the ground.
+Both networks accurately predict this sequence as an play.
 
-Unlike the previous video, the final label could be determined by both sets of explanations.
-However, the explanation quality and detail are much better for the new concept extraction.
-The old method has two good concepts (\emph{It was caught} and \emph{The ball was hit}) while the other two concepts do not describe anything.
-The sentence \emph{The pitch was} is also grammatically incorrect.\\
-The new concepts capture the fine level of detail exceptionally well. 
-One can determine that a fly ball was hit and that the fielder caught the ball.
-There is similarly some redundancy as one can determine some concepts through the others \emph{It was caught}.
-Its only issue was the explanation \emph{It hit the ground} which did not occur in the video. \\
+Unlike the previous video, the final label would not clearly be determined by both explanations.
+The old concept prediction only predicted two conflicting concepts out of which only \emph{he hit it} is correct.
+
+On the contrary, the new concept extraction predicted all relevant events that have occurred in the video.
+These concepts do have some redundancy, such as \emph{It was caught} and \emph{The fielder caught the ball} presenting the same thing.
+Moreover, the new concepts showcase finer level of granularity in event prediction by predicting that a fly ball has occurred. 
+The concept scores might slightly confuse a user, in this case, as they highlight two concepts more than the others. 
+If these were showcased on their own, they would seem more related to \textit{out} rather \emph{play}. \\
 
 % Label 3: curr_point = 201, id: ZLP8NFBVSNHS, strike
 Sourced explanation 3: \emph{the batter did not swing at a ball in the strike zone}. \\
 True label 3: strike
 
 The results are shown in \ref{concept-results-3}.
-Only the network with the new concept bottleneck extraction predicted the correct label.
+Both networks correctly predict this sequence as a strike.
 
 \begin{figure}[h]
-\caption{Comparison of the concept prediction precision score by a NN using old and new concepts in the intermediate layer.}
+\caption{Most relevant concepts for example 3 along with their concept scores. The LHS shows the ones predicted by the old concept bottleneck, while the RHS is predicted by the new one.}
 \centering
 \includegraphics[width=\textwidth]{concept-bottleneck-pipeline/explanations_concepts3.png}
 \label{concept-results-3}
 \end{figure}
 
-The old concept bottleneck network predicted play as a final label. 
-Given that it extracted the same concepts as it did for the first example under consideration, selecting play as a final label is not surprising.
-As argued in example 1, the concept \emph{It was caught} without further explanation seems related to the catcher, as was the case here.
-The new concept extraction method, on the other hand, extracts all of the concepts correctly. 
-It again has some concepts which one could have inferred from another (\emph{The batter missed the ball} and \emph{The batter missed}). \\
+Again, the new concept extraction pipeline seemed to have extracted better for describing the label.
+There are two reasons for it: they are more accurate and they they describe multiple events from which the final label could be inferred.
 
+The old concept prediction pipeline predicted two incorrect concepts: \emph{it was outside of the strike zone} and \emph{the umpire called it a ball}.
+All of the newly inferred concept are correct, on the contrary.
 
-To sum up, there seems to be a lot of promise that the new method dramatically improves explanations in terms of accuracy and the level of detail.
+The new concept prediction describes multiple relevant events. 
+For example, it describes both the umpire ruling the event as a strike and the ball being in the strike zone.
+On the other hand, only the umpire calling the pitch a strike was predicted. 
+The other two concepts either describe exactly the same thing \emph{the umpire ruled it a strike} or have predicted the final label instead of a concept \emph{it was a strike}.
+Note that the latter was also predicted in the new concept bottleneck pipeline. 
+That sentence should be omitted since it would be a meaningful statement in any explanation describing why the label occurred. \\
+
+To sum up, there seems to be promise that the new method improves explanations in both accuracy and the level of detail.
 We should create a human study in the future to validate these claims.
-In addition, notice that most concepts chosen should not actually be predicted since they do not occur in the explanation.
+In addition, notice that the current the current set of explanations, although mostly good, would not be considered true present concepts by the CoDEx module.
+They would need to occur in the explanation for that to be the case.
+
+In addition, notice that a few of concepts chosen should not actually be predicted since they do not occur in the explanation.
 However, they were mostly correct, especially for the new concept extraction.
-So, the poor precision value does not necessarily hurt explanations, but rather correct concepts are often not captured by the CoDEx module.
+So, the poor precision value may not not necessarily hurt explanations, but rather correct concepts may not often be captured by the CoDEx module.
 
 \subsection{Applicability in other Domains}
 \label{applicability-in-other-domains}
 
-SKIP this subsection one for now
 % TODO: finish
 
 As argued, the idea presented in this section in theory is not tied to video applications.
 % INSERT The caltech-ucsd birds-200-2011 dataset, Automated flower classification over a large number of classes, if I can reference descriptions
 In this evaluation, we measure how well does the CoDEx module fare when applied to a birds-flowers dataset.
-This dataset consists of 2000 birds/flowers images taken from X and X, combined with descriptions generated for these respective datasets.
+This dataset consists of 2000 birds/flowers images taken from X and X, combined with image descriptions generated for these respective datasets.
+As such, the explanations are written such that they describe the image, rather than the label.
 % INSERT ref results compared to 
 It was chosen due to its simplicity for standard NN, as demonstrated by the high accuracy of a non-concept bottleneck model in X.
 In addition, the explanations were also readily available to use for concept prediction.
@@ -431,37 +446,83 @@ It is often quite unclear which label they correspond to, such as \emph{that are
 Or, there is a few very specific concepts which are grouped together of other long concepts.
 For example, a concept \emph{this is a white and black bird with a black crown and a long black beak} would fall into that category.
 
-All the extracted concepts are included in Appendix X, 
+All the extracted concepts are included in Appendix X, along with frequencies of concept occurrence.
 
-The count is a result of sentence generalisation, which 
+To validate whether the initial observations translate to tangible results, we evaluate how well can an MLP predict the final result.
+The input to will concept prediction vectors produced by old and new CoDEx modules.
+% INSERT reference RoBERTa
+To estimate how much information is lost by mining concepts, the results are compared against a fine-tuned RoBERTa transformer trained directly from text.
+
+\begin{center}
+\begin{tabular}{ |M{4cm}||M{3cm}|M{3cm}|M{3cm}|  }
+ \hline
+ \multicolumn{4}{|c|}{Results from explanations only} \\
+ \hline
+ & Transformer & Old concepts & New concepts \\
+ \hline
+ Final accuracy & 1.000 $\pm$ 0.000 & 0.844 $\pm$ 0.008 & 0.874 $\pm$ 0.006 \\
+ \hline
+\end{tabular}
+\end{center}
+
+The newly extracted concepts are able to better distinguish between labels, although the difference is not as big as for the baseball dataset.
+The main reason for a loss in accuracy is the case where all inputs are 0, where any concept that was detected was pruned.
+This case happens more often for the old concept extraction, but the new one is not immune.
+As the transformer has the perfect accuracy, it is clear that its is extremely easy to distinguish between the two labels from descriptions.
+
+% TODO: model architecture
+We further evaluate the jointly trained models with identical architecture and hyper-parameters using old, new or no concepts in the intermediate layers:
+
+\begin{center}
+\begin{tabular}{ |M{4cm}||M{3cm}|M{3cm}|M{3cm}|  }
+ \hline
+ \multicolumn{4}{|c|}{Full model results} \\
+ \hline
+ & No concepts & Old concepts & New concepts \\
+ \hline
+ Final accuracy & 0.979 $\pm$ 0.004 & 0.987 $\pm$ 0.002 & 0.989 $\pm$ 0.002 \\
+ Concept precision & / & 0.367 $\pm$ 0.021 & 0.212 $\pm$ 0.009 \\
+ \hline
+\end{tabular}
+\end{center}
+
+The final accuracies of the models all have similarly high values, which is desirable.
+However, the concept precision results are poor, similar, but slightly worse, to the results for the MLB-V2E \cite{RefWorks:RefID:16-2021automatic} dataset.
+As mentioned, the text explanations do not describe all features that a bird/flower has.
+The CoDEx pipelines for that reason often fail to account for lots of concepts present in the image but not the explanations during training.
+In addition, the reason behind higher concept accuracy may be related to the NN optimising for a positive concept value much more often with new concept extraction.
+The training set for the new concept bottleneck pipeline has more than twice the number of detected concepts.
+
+We further present the predicted concept values for randomly selected data-points shown in figure \ref{bird-concept-predictions} and \ref{flower-concept-predictions}.
+
+\begin{figure}[h]
+\caption{Most relevant concepts for the image shown below along with their concept scores. The LHS shows the ones predicted by the old concept bottleneck, while the RHS is predicted by the new one.}
+\centering
+\includegraphics[width=\textwidth]{concept-bottleneck-pipeline/birds_predictions.png}
+\label{bird-concept-predictions}
+\end{figure}
+
+For the bird example in \ref{bird-concept-predictions}, both outcomes are could be better.
+The old concept bottleneck pipeline only shows a true but very specific feature.
+On the other hand, the new concept bottleneck pipeline predicted better concepts that would describe some bird well.
+However, given the orientation of the bird in the image, specifying that it has a breast and belly seems counter-intuitive.
+
+\begin{figure}[h]
+\caption{Most relevant concepts for the image shown below along with their concept scores. The LHS shows the ones predicted by the old concept bottleneck, while the RHS is predicted by the new one.}
+\centering
+\includegraphics[width=\textwidth]{concept-bottleneck-pipeline/flower_predictions.png}
+\label{flower-concept-predictions}
+\end{figure}
+
+The results for the \ref{flower-concept-predictions} are could be better.
+The new concept bottleneck extracts well that \emph{this flower has petals}.
+However, the other two concepts are not even valid sentences.
+The old concept bottleneck similarly extract concept texts missing crucial information.
 
 
-
-The reason for doing so that these sentences were written to distinguish between bird.
-For example, 
-
-The set of concepts extracted may be applicable, for 
-The full set of concepts is shown in Appendix X, but we 
-The concept extracted by both methods are shown in 
-
-We first compare the accuracy from predicted concepts without any new fine-tuning using both old and new CoDEx modules.
-The issue with 
-
-We use RoBERTa transformer trained directly from concept text as a baseline we want to ideally achieve.
-% INSERT comparison graph of the results
-The results are presented in X.
-
-
-Clearly 
-
-
-% TODO: after birds flowers dataset is done
-
-% From concept training
-
-% From concepts transformer training
-
-% Full training
+To sum up, neither method extracts good concepts for the bird-flowers dataset.
+The conjunction of bird image and flower descriptions .
+We believe that for the method to work, the explanations need to be generated such that they highlight why this data-point should be assigned to exactly this class and not the other.
 
 
 \subsection{Conclusion}

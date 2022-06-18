@@ -1,15 +1,74 @@
 % Luke feedback: Wee need to handle that more general concepts are often much more frequent then it is described 
 % For example - bird has feathers should exist in all cases but it is only described when the feathers are special.
 
-\chapter{Discussion}
+\chapter{Conclusion}
 
-No more then 1 paragraph summarising what they read.
-Why is it important? and its limitations
+This paper demonstrates that a concept bottleneck model can be combined with human-generated explanations to improve NN explainability.
+In doing so, we have discovered the following findings:
+\begin{enumerate}
+    \item \textbf{Logic-based methods can effectively be used to tackle some NLP seq2seq problems}.
+    Such an approach was crucial as the datasets were tiny, consisting of only around 100 examples per problem.
+    The dataset size made it impossible to use state-of-the-art NLP techniques such as transformers.
+    On the other hand, the solutions made by hand-crafting or learning a set of rules could achieve good performance despite the dataset size.
+    However, the limitation is the lack of scalability of the underlying ILASP \cite{RefWorks:RefID:54-ilasp} system used to learn a set of rules.
+    It was applied successfully on the generalisation task, while it was far off its theoretical optimality guarantee for the atomisation task.
+    When we applied it successfully, it did produce a better solution than a hand-crafted set of rules.
+    
+    
+    \item \textbf{The newly proposed CoDEx pipeline significantly outperforms its predecessor}. 
+    We have replaced the extraction part of the original pipeline with the new atomisation and generalisation stages.
+    A new set of concepts is much more informable and better at predicting the final label.
+    There is also an indication that the concepts it produced are better, but a large-scale human study must be conducted to validate such results.
+    However, the CoDEx module still has room for improvement, as it cannot account for concepts occurring in the video but not explicitly in the explanation.
+    This limitation leads to poor concept precision values.
+    In addition, the limitation makes applying the sequential training procedure challenging, which splits the training of concept and label prediction parts of the network.
+    Sequential training would be preferred, given that the joint training may not truly use concepts to predict the results.
+    We further show that the CoDEx pipelines, although well performing, do not extract a valuable set of concepts given a set of general image descriptions.
+    So, the applicability scope of this method needs to be further investigated. 
+    But, we believe it should work for any domain where the human-generated explanation is written to describe the final label.
+    
+    \item \textbf{The proposed logic-based classification produces high-performing and easily explainable solutions}.
+    We show that the method can be applied to the concept bottleneck pipeline exceptionally well.
+    It helped achieve much better results for the MLB-V2E dataset \cite{RefWorks:RefID:16-2021automatic} compared to the original concept-bottleneck models while being completely interpretable.
+\end{enumerate}
 
-What would you do if there was more time.
-Argue about specific ideas if you know them.
+\section{Future work}
 
-Talk about 
+There are several directions possible to take this project further. We highlight some of the ideas for doing so in this section. \\
+
+The most pressing concern is the CoDEx sparsity.
+The human-generated explanations do not capture all of the concepts present in the concept matrix explicitly.
+For example, both \emph{The ball was caught by the outfielder} and \emph{The outfielder got the pitch} would be extracted as separate concepts.
+These sentences could have been grouped with some combination of hyper-parameters. 
+However, finding such values often had an undesirable knock-on effect.
+For example, \emph{The ball was outside of the strike zone} and \emph{The ball was inside of the strike zone} would almost always be grouped before the first two sentences are. \\
+% INSERT An Inference Model for Semantic Entailment in Natural Language
+To mitigate that issue, we might use models that solve the semantic entailment problem.
+The semantic entailment task aims to determine whether some sentence S could be inferred by a sentence T.
+Such information would allow us to group \emph{The ball was caught by the outfielder} and \emph{The outfielder caught the pitch} seamlessly.
 
 
-The conclusion will go here.
+Another possible direction could involve improving upon the video classification network.
+We could enhance the current neural network architecture.
+% INSERT Deep residual learning for image recognition
+It consists of image features extracted by ResNet, from which motion features are captured using 1D convolution.
+Much better architectures do exist, such as the ones discussed in \ref{video-classification}.
+We expect that an improved architecture should improve concept prediction performance, which in turn improves the final class prediction.
+
+Comparing the performance with the original concept bottleneck \cite{RefWorks:RefID:35-koh2020concept} would also be beneficial.
+This work extends upon the original idea by mining the concepts from explanations.
+% INSERT The caltech-ucsd birds-200-2011 dataset
+The original work uses a human-engineered set of valuable concepts, which they applied to the CUB-birds dataset (X).
+Comparing with the same dataset would give more insight into the generality of the concepts extracted by the CoDEx pipeline.
+
+
+Moreover, the concept explanation quality should be evaluated using a human study, such as a Mechanical Turk analogous to \cite{RefWorks:RefID:16-2021automatic}.
+Such a study would give more confidence regarding the quality of generated explanation.
+In addition, we should also construct a human study interpreting the logic-based classification framework.
+
+Finally, we could improve upon the atomisation procedure.
+The atomisation procedure is the main culprit behind any concepts that are invalid sentences.
+With the Jaccard score at around 0.5, the atomisation task has a lot of room for improvement. \\
+% INSERT reference Exploring the limits of transfer learning with a unified text-to-text transformer.
+A possible approach for handling this issue may involve trying to solve this problem using a seq2seq transformer such as T5.
+It would require greatly extending the existing dataset, but it would undoubtedly perform better with a sufficient number of examples.
