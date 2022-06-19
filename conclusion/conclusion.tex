@@ -42,23 +42,23 @@ For example, both \emph{The ball was caught by the outfielder} and \emph{The out
 These sentences could have been grouped with some combination of hyper-parameters. 
 However, finding such values often had an undesirable knock-on effect.
 For example, \emph{The ball was outside of the strike zone} and \emph{The ball was inside of the strike zone} would almost always be grouped before the first two sentences are. \\
-% INSERT An Inference Model for Semantic Entailment in Natural Language
+% INSERT An Inference Model for Semantic Entailment in Natural Language DONE
 To mitigate that issue, we might use models that solve the semantic entailment problem.
 The semantic entailment task aims to determine whether some sentence S could be inferred by a sentence T.
-Such information would allow us to group \emph{The ball was caught by the outfielder} and \emph{The outfielder caught the pitch} seamlessly.
+Such information would allow us to group \emph{The ball was caught by the outfielder} and \emph{The outfielder caught the pitch} seamlessly \cite{RefWorks:RefID:85-salvo2005inference}.
 
 
 Another possible direction could involve improving upon the video classification network.
 We could enhance the current neural network architecture.
-% INSERT Deep residual learning for image recognition
-It consists of image features extracted by ResNet, from which motion features are captured using 1D convolution.
+% INSERT Deep residual learning for image recognition DONE
+It consists of image features extracted by ResNet \cite{RefWorks:RefID:86-he2016deep}, from which motion features are captured using 1D convolution.
 Much better architectures do exist, such as the ones discussed in \ref{video-classification}.
 We expect that an improved architecture should improve concept prediction performance, which in turn improves the final class prediction.
 
 Comparing the performance with the original concept bottleneck \cite{RefWorks:RefID:35-koh2020concept} would also be beneficial.
 This work extends upon the original idea by mining the concepts from explanations.
-% INSERT The caltech-ucsd birds-200-2011 dataset
-The original work uses a human-engineered set of valuable concepts, which they applied to the CUB-birds dataset (X).
+% INSERT The caltech-ucsd birds-200-2011 dataset DONE
+The original work uses a human-engineered set of valuable concepts, which they applied to the CUB-birds dataset (X) \cite{RefWorks:RefID:69-wah2011caltech-ucsd}.
 Comparing with the same dataset would give more insight into the generality of the concepts extracted by the CoDEx pipeline.
 
 
@@ -69,6 +69,6 @@ In addition, we should also construct a human study interpreting the logic-based
 Finally, we could improve upon the atomisation procedure.
 The atomisation procedure is the main culprit behind any concepts that are invalid sentences.
 With the Jaccard score at around 0.5, the atomisation task has a lot of room for improvement. \\
-% INSERT reference Exploring the limits of transfer learning with a unified text-to-text transformer.
-A possible approach for handling this issue may involve trying to solve this problem using a seq2seq transformer such as T5.
+% INSERT reference Exploring the limits of transfer learning with a unified text-to-text transformer. DONE
+A possible approach for handling this issue may involve trying to solve this problem using a seq2seq transformer such as T5 \cite{RefWorks:RefID:88-raffel2020exploring}.
 It would require greatly extending the existing dataset, but it would undoubtedly perform better with a sufficient number of examples.

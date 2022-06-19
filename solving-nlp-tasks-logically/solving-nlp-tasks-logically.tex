@@ -54,7 +54,7 @@ The former converts a declarative sentence into one or more \textbf{atomic sente
 % TODO add reference %
 Note that this is equivalent to the definition used in logic.
 However, the sentence structure considered in this project is often much more complex than the one considered in logic.\\
-% INSERT insert simple predicates definition reference %
+% INSERT insert simple predicates definition reference NOREF %
 An \textbf{atomic sentence} should only contain simple predicates, eliminating compound and complete predicates from a sentence.
 
 
@@ -713,6 +713,7 @@ This technique prevents the ILASP process from exceeding the memory limit while 
 The aforementioned ILASP behaviour modification is possible through the use of PyLASP scripts.
 
 \subsection{Atomisation Learning Challenges}
+\label{atomisation-learning-challenges}
 
 Recall that the atomisation is only solved using the hand-crafted solution. 
 In this section, we highlight why it is not currently possible to learn a good atomisation solution with ILASP.
@@ -840,7 +841,7 @@ The results are summarised in the table below:
 \end{center}
 
 Overall, the results are relatively high, with >85\% test Jaccard Index value.
-This result means that if a sentence was generalised, we expect more than 85\% of the sentences the model produces to be correct.
+This result means that given a set of true sentences and a set of predicted sentences, more than 85\% will match exactly.
 Looking into more detail the types of mistakes the final model makes, they can be subdivided into three groups:
 
 % INSERT how often each occurs for one solution % 
@@ -858,7 +859,7 @@ Finally, in all experiments, $Set$-$Precision$ and $Set$-$Recall$ were similar, 
 
 The hypothesis was learned and engineered on a subset of the MLB-V2E dataset \cite{RefWorks:RefID:16-2021automatic}.
 % INSERT CUB reference
-We compare their performance on the MLB-V2E dataset and a subset of the CUB-bird dataset, an out-of-domain dataset.
+We compare their performance on the MLB-V2E dataset and a subset of the CUB-bird dataset \cite{RefWorks:RefID:69-wah2011caltech-ucsd}, an out-of-domain dataset.
 The former dataset consists of 120 generalisation examples, while the latter has 100 samples.
 
 The results are summarised in tables below:
@@ -901,8 +902,7 @@ It barely occurs in the MLB-V2E dataset, so both solutions fail to account for i
 
 \subsection{Atomisation}
 
-% INSERT reference to atomisation learning%
-There is no cross-validation evaluation of the ILASP output due to a poorly learned solution and high computation requirements.
+There is no cross-validation evaluation of the ILASP output due to a poorly learned solution and high computation requirements (\ref{atomisation-learning-challenges}).
 However, the best-learned solution is still compared to the hand-crafted one to showcase how far it is from the manually generated one.
 To better showcase the poor performance of the learned solution, simple $H$, a hypothesis which always returns the sentence in full, is introduced.
 
@@ -945,16 +945,21 @@ The results averages and standard errors are presented in the tables below:
 \end{center}
 
 The hand-crafted solution vastly outperforms the learned one, with a 45\% Jaccard Index improvement.
-Nevertheless, even the hand-crafted solution displays a lot of room for improvement as the Jaccard index value is at only 0.55.
-This result means that given a sentence, we expect almost every other atomic sentence the model produced for that sentence to be incorrect.
-
-A significant hurdle for the hand-crafted solution were the sentences with relative clauses. 
-For example, the sentence:
+Nevertheless, even the hand-crafted solution has room for improvement as the Jaccard Index value is at 0.55.
+This result means that given a set of true sentences and a set of predicted sentences, we expect that 55\% will match exactly.
+The Jaccard Index value, however, is the worst-case estimate.
+In some cases, the output is well enough even though it is not exactly correct.
+For instance, consider the sentence:
 \begin{lstlisting}
-The pitcher threw the ball which was outside. 
-  $\rightarrow$ The pitcher threw the ball. The ball was outside.
+The pitcher threw the ball which was high. 
+  $\rightarrow$ The pitcher threw the ball. The ball was high.
 \end{lstlisting}
-requires that ends of the splitting tag be in the same atomic sentence, which clashes with the existing core atomisation idea (\ref{hand-crafting-the-atomisation-solution}).
+This sentence is spilt with the current model into \verb+The pitcher threw the ball.+ \verb+Which was high.+, resulting in the Jaccard Index value of 0.333.
+
+Nevertheless, the sentence \verb+Which was high+ is often sufficiently good for downstream tasks.
+For example, it would be grouped with a valid sentence \verb+It was high+ in our concept bottleneck pipeline (Chapter \ref{concept-bottleneck-pipeline}). \\
+Also, the presented sentence contains a relative clause, which was a significant hurdle for the hand-crafted solution.
+It requires that the ends of the splitting tag be in the same atomic sentence, which clashes with the existing core atomisation idea (\ref{hand-crafting-the-atomisation-solution}).
 
 
 The out-of-domain dataset results in a 0.04 Jaccard Index drop for the hand-crafted hypothesis.

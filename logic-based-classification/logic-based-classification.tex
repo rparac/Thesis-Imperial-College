@@ -1,36 +1,31 @@
 \chapter{Logic-Based Classification}
 \label{logic-based-classification}
 
-% TODO: Alessandra feeedback
-% Concept extraction can be used for a classification problem - that problem uses attention on the concepts to determine which ones are more active
-% A more interpretable approach would involve rule-based classification, which we explore in this section
-% Furthermore, despite the concept extraction from text presented, concepts can really be any features which is accounted for in this chapter.
-
-In order to find reasons for choosing a particular label, the concept bottleneck pipeline \cite{RefWorks:RefID:35-koh2020concept} uses human-explainable high-level concepts in the intermediate layer.
-These concepts should help a user to understand why a prediction happened.
+The concept bottleneck pipeline \cite{RefWorks:RefID:35-koh2020concept} uses human-explainable high-level concepts in the intermediate layer to find reasons for choosing a particular label.
+These concepts should help a human understand why a prediction happened.
 However, just because concepts are predicted does not mean they are indeed used in the final prediction.
 
 For example, a network may learn a pattern which predicts a label \emph{out}, if some concept has a value greater than 0.2.
-Yet, such a concept would not be shown to the user as relevant for the final prediction.
-Showcasing concepts after the attention layer, as we have done in the previous chapter, would showcase more relevant concepts for the final prediction.
-Still, the attention layer showcases how much weight each concept has in the final prediction, but not the logic the MLP uses in order to choose the final label.
+Yet, the model would not show such a concept to the user as relevant for the final prediction.
+As we have done in the Chapter \ref{concept-bottleneck-pipeline}, showcasing the concepts after the attention layer would present the concepts more relevant for the final prediction.
+Still, the attention layer showcases the weight each concept has in the final prediction, but not the logic the MLP uses to choose the final label.
 
 A fully interpretable method for predicting the final label would provide a clear link between the concepts and the outcomes.
-In addition, model from concepts to the label can be validated and should in an ideal case follow the same logic as humans.
+In addition, models from concepts to the label can be validated and should, in an ideal case, follow the same logic as humans.
 
-To improve upon the concept bottleneck model interpretability, this chapter presents a classification method using an ILP system.
+This chapter presents Prob-FF-NSL, an ILP-based classification method to improve the concept bottleneck model interpretability. 
 The method works with probabilistic facts, allowing it to be incorporated into a concept bottleneck pipeline (Chapter \ref{concept-bottleneck-pipeline}).
-Nevertheless, it is not limited to text concepts; it is applicable with any interpretable probabilistic NN output. 
+Nevertheless, it is not limited to text concepts; it applies to any interpretable probabilistic NN output. 
 % INSERT ref to evaluation
-In section X, we use it with outcomes of a image classification task.
+In section \ref{sudoku-grid-learning}, we evaluate it with outcomes of an image classification task.
 The ILP system utilised for this task is FastLAS \cite{RefWorks:RefID:19-law2020fastlas:}, a scalable system that incorporates criteria for domain-specific optimisation.
 
 \section{Changes to the Concept Bottleneck Architecture}
 \label{change-to-the-concept-bottleneck-architecture}
 
-An introduction of the rule learning component would result in the change in the concept bottleneck architecture shown in figure \ref{logic-based-concept-bottleneck}.
+An introduction of the rule learning component would result in the change in the concept bottleneck architecture shown in the figure \ref{logic-based-concept-bottleneck}.
 \begin{figure}[h]
-\caption{A flowchart to select an outcome of a multi-label classification problem.}
+\caption{A flowchart to select an outcome of a multi-class classification problem.}
 \vspace{10pt}
 \centering
 \includegraphics[width=\textwidth]{logic-based-classification/logic-based-classification-architecture.png}
@@ -44,18 +39,18 @@ Training a concept bottleneck pipeline then turns into a 3-step process:
     \item Train the rule-learning component.
 \end{enumerate}
 
-At run-time take predict the concepts using the model trained in step 1, before applying the rules learned in step 3 to obtain the final prediction.
+At run-time, predict the concepts using the model trained in step 1 before applying the rules learned in step 3 to obtain the final prediction.
 
-% INSERT FF-NSL reference
 The ILP paradigm does not support any notion of probability; an atom can either be in or out of an answer set. 
-So, to force the learner to treat less less likely cases differently, we carefully choose the FastLAS example penalties, similar to X.
+% INSERT FF-NSL reference DONE
+So, to force the learner to treat less likely cases differently, we carefully choose the FastLAS example penalties, similar to \cite{RefWorks:RefID:71-cunnington2021ff-nsl:}.
 However, we aim to use those penalties to find the most likely solution.
 
 \section{Choosing FastLAS Parameter Values}
 \label{choosing-fastlas-parameter-values}
 
 % INSERT reference to background section decomposable
-FastLAS can find an optimal solution with respect to a scoring function of kind ($\curly{S} + \curly{S}_{pen}$), where $\curly{S}$ is a decomposable scoring function (X) and $\curly{S}_{pen}$ is a sum of all uncovered example penalties.
+FastLAS can find an optimal solution with respect to a scoring function of kind ($\curly{S} + \curly{S}_{pen}$), where $\curly{S}$ is a decomposable scoring function (\ref{fastlas-background}) and $\curly{S}_{pen}$ is a sum of all uncovered example penalties.
 
 In this section, we attempt to find the appropriate scoring function $\curly{S}$ and values for penalties such that the final solution is highly likely given the learning task tuple $T = \langle B, M, E_{prob} \rangle$. 
 
@@ -181,7 +176,7 @@ H
 \sum_{H,\vec{x}_{ei}\not\models y_e} e_{pen}
 \end{align}
 
-Hence, by setting the penalty for each example to $-\frac{1}{I} \ln \left ( \frac{\epsilon}{1 - \epsilon} \right )$ and prior penalties to 0, FastLAS would return a solution close to the maximum likelihood for all examples.
+Hence, by setting the penalty for each example to $-\frac{1}{I} \ln \left ( \frac{\epsilon}{1 - \epsilon} \right )$ and prior (hypothesis) penalties to 0, FastLAS would return a solution close to the maximum likelihood for all examples.
 
 \subsubsection{Integer penalties}
 \label{integer-penalties}
@@ -215,12 +210,12 @@ K \sum_e
 && \text{(by \ref{rounding})}
 \end{align}
 
-Therefore, after choosing some large $K > 0$, we assign the non-coverage penalty of $\text{round} \left ( -\frac{K}{I} \ln \left ( \frac{\epsilon}{1 - \epsilon} \right ) \right )$ for each example.
+Therefore, after choosing some large $K > 0$, we assign the non-coverage penalty of $\text{round} \left ( -\frac{K}{I} \ln \left ( \frac{\epsilon}{1 - \epsilon} \right ) \right )$ to each example.
 
 \subsection{Incorporating a Prior over the Hypothesis Space}
 
 Now, we can extend the approach done in the previous section by considering a prior over hypothesis space ($p(H)$) too.
-The extension would give a plausibility value to each potential $H$ before we evaluate its fitness on the examples. 
+The extension would give a plausibility value to each potential $H$ before evaluating its fitness on the examples. 
 We can combine this with the likelihood function to give a posterior probability for the data and hypothesis, namely:
 \begin{align}
 p(\vec{y}, H|\vec{X})
@@ -233,6 +228,7 @@ We can log this to get:
 & = \ln p(\vec{y}|H, \vec{X}) + \ln p(H)
 \end{align}
 
+% INSERT reference to MAP estimate paper NOREF
 Maximising the above equation leads to what we would call the maximum posterior estimate for $H$, or maximum a posteriori (MAP) estimate:
 \begin{align}
 H_{\text{MAP}}
@@ -257,8 +253,8 @@ H_{\text{MAP}}
 
 There are several ways to place a prior on hypothesis space. 
 The default ILASP \cite{RefWorks:RefID:18-law2020ilasp} and the usual FastLAS approach assign smaller penalties, i.e., higher prior probabilities, to shorter clauses.
-% INSERT online symbolic learning of policies for explainable security
-Some problems benefited from assigning lower penalties to "ideal length" rules, such as X.
+% INSERT online symbolic learning of policies for explainable security DONE
+Some problems benefited from assigning lower penalties to "ideal length" rules, such as  \cite{RefWorks:RefID:67-drozdov2021online}.
 
 We have opted for a slightly different approach. \\
 Starting with a set of potential rules $\curly{R}$, let $q_r$ be an independent probability that $r$ is included in $H$ (written $r \in H$) for every potential rule $r \in \curly{R}$. Then the prior is written as:
@@ -315,33 +311,33 @@ This setup suggests a value for $q_{r_l} = \frac{m_l}{n_l}$, resulting in the fo
 \subsection{Encoding Binary Classification Task}
 \label{encoding-binary-classification-task}
 
-In order to encode a solution to a binary classification problem using ASP, we can do the following:
+To encode a solution to a binary classification problem using ASP, we can do the following:
 \begin{itemize}
     \item Write rules such as \verb+label1 :- ...+  for one of the labels.
     \item Add the rule of the form \verb+label2 :- not label1+.
 \end{itemize}
 
 % TODO: remove the itemise and encode is as a piece of text
-With this approach, we are guaranteed to have exactly one label in each answer set of the task.
-We often want exactly one answer set as a solution, as usually no reason to prefer one over the other in a classification task.
+With this approach, we are guaranteed to have precisely one label in each answer set of the task.
+We always want exactly one answer set as a solution, as we always want just one outcome.
 To prevent that possibility from occurring, the following types of ASP rules are not used:
 \begin{itemize}
     \item Choice rules --- Choice rules give rise to multiple answer sets, which we do not want.
-    \item "Not chain" --- Combination of normal rules which can only be satisfied by multiple answer sets, such as \verb+{p :- not q. q :- not p.}+.
-    \item Constraints --- Constraints are used to eliminate an answer from occurring.
+    \item "Not-chain" --- Combination of normal rules which can only be satisfied by multiple answer sets, such as \verb+{p :- not q. q :- not p.}+. The program satisfying the "non-chain" requirement is stratified. This means that its rules can be split into disjoint multiple strata $P = P_0 \cup P_1 \cup ... \cup P_n$ where each strata $P_i$ can only have negations of atoms defined in $P_0 \cup ... \cup P_{i-1}$.
+    \item Constraints --- Constraints are used to eliminate an answer from occurring. If we were to remove the single occurring answer set, we would not get a solution.
 \end{itemize}
 
-An alternative to this encoding which would return a solution with a highest score is also possible, however, it is not nearly as interpretable.
+An alternative to this encoding which would return a solution with the highest score is also possible. However, it is not nearly as interpretable.
 
 \begin{example}
 \label{sudoku-binary-example}
 Encoding the sudoku learning task:
 
 % INSERT reference evaluation
-The sudoku 4x4 learning task (X) should deduce whether a grid or is not valid.
+The sudoku 4x4 learning task (\ref{sudoku-grid-learning}) should deduce whether a grid is or is not valid.
 
 1. \textit{Construct the background knowledge:} \\
-The background knowledge for sudoku could contain the following rules that specify which row/column/block does a cell belong to.
+The background knowledge for sudoku could contain the following rules that specify which row/column/block a cell belongs to.
 \begin{verbatim}
 num(1..4).
 col(1..4).
@@ -382,12 +378,12 @@ We chose that we wish to learn what makes a cell invalid in this example, result
 
 4. \textit{Add examples and prior penalty definitions:}
 % INSERT refernce to example definition and prior penalty definition
-This step will be discussed in X and X.
+We will discuss this step in the example \ref{sudoku4x4-examples-prior}.
 \end{example}
 
 \subsection{Encoding Multi-label Classification Task}
 
-The multi-label classification outcome is decided using the flowchart in \ref{flowchart-multi-label-classification}, where the \verb_conds(label(x))_ predicate that is true when conditions for a particular label are satisfied.
+The multi-label classification outcome is decided using the flowchart in \ref{flowchart-multi-label-classification}, where the \verb_conds(label(x))_ predicate is true when conditions for a particular label are satisfied.
 
 \begin{figure}[h]
 \caption{A flowchart to select an outcome of a multi-label classification problem.}
@@ -397,7 +393,7 @@ The multi-label classification outcome is decided using the flowchart in \ref{fl
 \label{flowchart-multi-label-classification}
 \end{figure}
 
-The choice for the flowchart was made to aid interpretability because FastLAS learns the following set of rules:
+We chose this flowchart structure to aid interpretability because FastLAS learns the following set of rules:
 \begin{verbatim}
 conds(label(1)) :- ...
 conds(label(1)) :- ...
@@ -421,10 +417,10 @@ Learning these types of rules is encoded in FastLAS with the following syntax:
 Furthermore, to make the learner use the logic presented in the flowchart, we need to encode the following: 
 \begin{enumerate}
     \item The position of a label in the flowchart chain.
-    \item Selection the highest priority label whose conditions are satisfied.
+    \item Selection of the highest priority label whose conditions are satisfied.
     \item Selection of the lowest priority label when no conditions are satisfied.
 \end{enumerate}
-The enumerated criteria results in the following ASP encoding added to the background of a learning task:
+The enumerated criteria result in the following ASP encoding added to the background of a learning task:
 \begin{lstlisting}
 % Encoding 1 with label(name, position) (lower=better)
 label(l1, 0).
@@ -449,14 +445,14 @@ selected(L) :- label(L, P), not higher_priority_selection(L, P),
 exists_lower_priority(L, P) :- label(L, P), label(L2, P2), P2 > P.
 \end{lstlisting}
 
-Notice that the presented encoding also produces exactly one answer set, same as the encoding for the binary classification.
+Notice that the presented encoding also produces exactly one answer set, the same as the encoding for the binary classification.
 
 \begin{example}
-Encoding the multi-label sudoku 4x4 learning task:
+Encoding the multi-class sudoku 4x4 learning task:
 
 % INSERT reference evaluation
-Consider an extension of the binary sudoku 4x4 task in example \ref{sudoku-binary-example}, which introduces an additional label \verb_conflict_. 
-That label should be true only when an example contains two digit written in the same cell.
+Consider an extension of the binary sudoku 4x4 task in the example \ref{sudoku-binary-example}, which introduces an additional label \verb_conflict_. 
+That label should be true only when an example contains two digits written to the same cell.
 The following steps are needed to solve the task using the presented multi-label classification encoding:
 
 1. \textit{Construct the background knowledge:} \\
@@ -503,15 +499,14 @@ We chose that we wish to learn what makes a cell invalid in this example, result
 
 4. \textit{Add examples and prior penalty definitions:}
 % INSERT refernce to example definition and prior penalty definition
-This step will be discussed in X and X.
+We will discuss this step in the example \ref{sudoku4x4-examples-prior}.
 \end{example}
 
 
 \subsection{Creating the Example File}
 
-The example file incorporates all of the theory presented in \ref{choosing-fastlas-parameter-values}.
-% TODO: insert background example and write task name
-Recall from X that the ILP-X task allow positive and negative examples.
+The example file incorporates the theory presented in \ref{choosing-fastlas-parameter-values}.
+Recall from \ref{ilasp-background} that the FastLAS task allows defining positive and negative examples.
 Positive examples are bravely entailed, i.e. the final solution should be extended by at least one answer set.
 On the other hand, the negative examples are cautiously entailed, so the final solution must not be extended by any answer set.
 Because of our classification encodings, the learned hypothesis can only ever return one answer set, making the positive examples sufficient to encode any task.
@@ -524,11 +519,10 @@ To account for FastLAS's inability to deal with probabilistic atoms, we need to 
 {... context atoms derived from the raw example ...}
 \end{lstlisting}
 
-The values for the constants $K, I,$ and $\epsilon$ are currently set to $1000, 100$ and $0.01$, respectively.
+The constants $K, I,$ and $\epsilon$ are currently set to $1000, 100$ and $0.01$, respectively.
 
 We further need to encode the prior (hypothesis) penalties.
-% INSERT reference decomposable %
-Any custom defined FastLAS scoring must be decomposable, and we can only directly input the scoring function decomposition as FastLAS code.
+Any custom-defined FastLAS scoring must be decomposable \ref{fastlas-background}, and we can only directly input the scoring function decomposition as FastLAS code.
 Recall that the scoring function decomposition we wish to encode is given by $\curly{S}^{rule}(r, T) = K \left (\ln (n_l - m_l) - \ln m_l  \right)$.  \\
 % INSERT reference scoring function background which should include the simplest example.
 As mentioned in X, defining a scoring function decomposition is done by defining the predicate \verb_penalty/2_. Any logic related to \verb_penalty/2_ is defined with atoms \verb+in_head/1+ and \verb+in_body/1+ which contain all the head and body predicates of a rule $r$.
@@ -545,12 +539,80 @@ pen(L, 100000000000) :- L = #count{X : in_head(X); X : in_body(X)},
 ").
 \end{lstlisting}
 
+\begin{example}
+\label{sudoku4x4-examples-prior}
+Encoding a valid sudoku 4x4 board shown below.
 
-A simple, yet extremely beneficial, implemented optimisation is \textbf{example aggregation}. \\
-When sampling $I$ values, track each outcome and the its number of occurrences before generating the actual examples.
+\begin{center}
+\setlength\parskip{0pt}
+\includegraphics[width=.2\linewidth]{logic-based-classification/example_sudoku_board.png}
+\end{center}
+
+1. Extract the relevant information from an example. Here we extract the positions of the digits on the board.
+These can be represented by the predicates:
+\begin{verbatim}
+    value(2, 2, 4). value(3, 1, 1). 
+    value(2, 4, 2). value(3, 3, 2).
+\end{verbatim}
+where \verb_value_ stores row, column and digit information in that order.
+
+2. Generate the example string. 
+The example context will consist of information extracted in step 1, the inclusion of the true label, while the exclusion would contain all of the incorrect labels.
+Finally, the penalty is computed from $\text{round} \left ( -\frac{K}{I} \ln \left ( \frac{\epsilon}{1 - \epsilon} \right ) \right )$.
+If we set the values for constants $K, I,$ and $\epsilon$ to $1000, 100$ and $0.01$ and consider the binary version of the sudoku task, we get the following example:
+
+\begin{verbatim}
+#pos(id@46,
+{ selected(valid) },
+{ selected(invalid) },
+{
+ value(2, 2, 4). value(3, 1, 1). 
+ value(2, 4, 2). value(3, 3, 2).
+}).
+\end{verbatim}
+
+3. Generate the prior penalties.
+Choosing the values for parameters $m_l$ is done through empirical evaluation, while $n_l$ is determined from a language bias.
+The former is the number of rules of length $m_l$ that we expect in a final solution, while the latter is the total number of rules with length $l$ from a current language bias.
+
+\begin{verbatim}
+#modeh(selected(invalid)).
+
+#modeb(row(var(cell), var(row))).
+#modeb(value(var(cell), var(num))).
+
+#maxv(4).
+\end{verbatim}
+
+Clearly we can have 2 rules of length 1 (head + each body), so $n_1$ is 2.
+Also, $n_2 = 2$ since only the following rules exists:
+\begin{verbatim}
+selected(invalid) :- row(V3,V4); value(V1,V2).
+selected(invalid) :- row(V1,V3); value(V1,V2).
+\end{verbatim}
+They need to be defined so that their types match, are unique, and are not trivially replaceable by another rule.
+The last requirement means that we do not allow rules such as $selected(invalid) \text{:-} row(V1, V3), row(V2, V4)$ since row(1, 1) would make this rule true.
+
+Setting empirically determined values $m_1 = m_2 = 1$, results in the following hypothesis penalties.
+\begin{lstlisting}
+penalty(P, custom) :- L = #count{X : in_head(X); X : in_body(X)}, pen(L, P).
+pen(1, 0).
+pen(2, 0).
+pen(L, 100000000000) :- L = #count{X : in_head(X); X : in_body(X)}, 
+    L >= 3.
+\end{lstlisting}
+
+The values for parameters $n_l$ are in practice approximated using $\binom{r}{l}$, the number of possible selections of l predicates from r \#modeb definitions.
+Note that this approximation is completely accurate when we only have constant \#modeb, which is the case for the concept bottleneck pipeline.
+
+Further extensions to this system should make this value more accurate, but it did not hurt performance.
+
+\end{example}
+
+
+A simple, yet extremely beneficial, implemented performance optimisation is \textbf{example aggregation}. \\
+When sampling $I$ values, track each outcome and its number of occurrences before generating the actual examples.
 The tracking allows to replace $C$ identical examples of penalty $\text{round} \left ( -\frac{K}{I} \ln \left ( \frac{\epsilon}{1 - \epsilon} \right ) \right )$ with only one example of penalty $C * \text{round} \left ( -\frac{K}{I} \ln \left ( \frac{\epsilon}{1 - \epsilon} \right ) \right )$, reducing the overall FastLAS running time.
-
-% TODO: Example for binary sudoku with this one
 
 % \subsubsection{Search Space Counting}
 % TODO: Finish Implementation
@@ -566,56 +628,70 @@ The evaluation is carried out on two tasks:
 The former is a much simpler task which will evaluate whether the method does indeed work well, while the latter will consider the Prob-FF-NSL framework within the context of a concept bottleneck pipeline.
 
 \subsection{Sudoku grid learning}
+\label{sudoku-grid-learning}
 
-This task aims to determine whether a sudoku grid with hand-written digits is valid, i.e. there are no repeated number in block, row nor column.
-% INSERT FF-NSL
-It is the repeat of the task studied in X.
+This task aims to determine whether a sudoku grid with hand-written digits is valid, i.e. there are no repeated numbers in a block, row or column.
+% INSERT FF-NSL DONE
+It is the repeat of the task studied in \cite{RefWorks:RefID:71-cunnington2021ff-nsl:}.
 There are two versions of it, 4x4 and 9x9 sudoku grid validity tasks.
 
-The network uses a probabilistic ILP framework to account for uncertainties in the digit prediction NN.
-The prediction confidence values are inputted to the Prob-FF-NSL framework.
+The digit values are treated as concepts in this example, while their probabilities are obtained from a digit-predicting neural network.
 
-Given that this task is simple to tackle for a logic-based learning system and a standard CNN, it is explored with different percentages of digit images are subject to a distribution shift.
-The distribution shift in this case is a 90 degree image rotation.
-It has a significant impact for the overall task, reducing the accuracy of digit prediction from 99\% to 14\%.
+Given that this task is simple to tackle for a logic-based learning system and a standard CNN, it is explored when different percentages of digit images are subject to a distribution shift.
+The distribution shift, in this case, is a 90-degree image rotation.
+It significantly impacts the overall task, reducing the accuracy of digit prediction from 99\% to 14\%.
 
-We will compare the our approach to three baselines: random forest, CNN-LSTM architecture and FF-NSL architecture. 
-The latter similarly uses example penalties to give higher penalties to more likely examples, but the selection of the penalties was done through empirical evaluation.
+We will compare our approach to three baselines: random forest, CNN-LSTM architecture and FF-NSL architecture. 
+The latter similarly uses example penalties to give higher penalties to more likely examples, but Cunnington et al. \cite{RefWorks:RefID:71-cunnington2021ff-nsl:} selected the example penalties through empirical evaluation.
 % INSERT reference to section with FF-NSL
-It is explained in more detail in X.
-% INSERT Uncertainty-aware deep classifiers using generative models
-The FF-NSL and Prob-FF-NSL are tested out with a standard digit predictor and uncertainty aware one based on X.
-The standard digit predictor is often confidently wrong under a distribution shift, while the uncertainty aware one returns a more evenly spread out distribution upon seeing unfamiliar examples.
+It is explained in more detail in \ref{probabilistic-rule-learning}.
+Moreover, the FF-NSL and Prob-FF-NSL are tested using the same digit predictor network.
 
-The learned models are compared with the true test set and the shifted test test.
-The former always inputs the correct value to the network, while the latter has the same proportion of digit images shifted as the Prob-FF-NSL training set.
+The learned models are compared with the true and shifted test sets.
+The former always presents the correct digit prediction to the framework, while the latter has the same proportion of digit images shifted as the Prob-FF-NSL/FF-NSL training set.
 
-The results for the sudoku 4x4 task are shown in figure \ref{sudoku4x4-results}.
+The results for the sudoku 4x4 task are shown in the figure \ref{sudoku4x4-results}.
 
 \begin{figure}[h]
-% INSERT reference FF-NSL
-\caption{A comparison of the sudoku 4x4 task performance with increasing level of distribution shifts. Adapted from X}
+% INSERT reference FF-NSL DONE
+\caption{A comparison of the sudoku 4x4 task performance with an increasing level of distribution shifts. Adapted from Cunnington et al. \cite{RefWorks:RefID:71-cunnington2021ff-nsl:}}
 \centering
 \includegraphics[width=\textwidth]{logic-based-classification/sudoku4x4.png}
 \label{sudoku4x4-results}
 \end{figure}
 
+The results demonstrate that the Prob-FF-NSL and FF-NSL can learn the correct solution in spite of a high distribution shift.
+They cover all of the true test examples even when 70\%/80\% of examples are subject to a distribution shift.
+Both approaches have an almost identical performance dealing with a shifted test set.
+On the other hand, the LSTM-CNN and the random forest fail to learn a correct solution even when given ten times more examples.
+The models with more examples perform comparably to the FF-NSL approaches on a shifted test set.
+With only 320 examples, they fail to learn a solution with their performance slightly above 0.5, which is a threshold that a random model would achieve.
 
-
-The results for sudoku 9x9 are shown in figure \ref{sudoku9x9-results}
+The results for sudoku 9x9, presented in \ref{sudoku9x9-results}, show similar results.
 \begin{figure}[h]
-% INSERT reference FF-NSL
-\caption{A comparison of the sudoku 4x4 task performance with increasing level of distribution shifts. Adapted from X}
+% INSERT reference FF-NSL DONE
+\caption{A comparison of the sudoku 9x9 task performance with an increasing level of distribution shifts. Adapted from Cunnington et al. \cite{RefWorks:RefID:71-cunnington2021ff-nsl:}}
 \centering
-\includegraphics[width=\textwidth]{logic-based-classification/sudoku4x4.png}
+\includegraphics[width=\textwidth]{logic-based-classification/sudoku9x9.png}
 \label{sudoku9x9-results}
 \end{figure}
 
+The main difference in performance is present for the random forest and CNN-LSTM baseline models, which failed to learn a solution.
 
-All in all, the Prob-FF-NSL generally performs well, having a perfect true test score in spite of 70\% of examples under a distribution shift.
-However, it performs worse than the FF-NSL method on this particular task. 
-The reason for it is the higher importance the FF-NSL assigns to the train examples that are not under the distribution shift.
-It may be useful to integrate a similar notion of example importance to the Prob-NSL approach too.
+The model returned the following rules in all cases where the true test accuracy was 100\%:
+\begin{lstlisting}
+selected(invalid) :- neq(V0,V1), neq(V1,V0), value(V0,V2), value(V1,V2), row(V0,V3), row(V1,V3), cell(V0), cell(V1), num(V2), row(V3).
+selected(invalid) :- block(V1,V0), block(V2,V0), neq(V1,V2), neq(V2,V1), value(V1,V3), value(V2,V3), block(V0), cell(V1), cell(V2), num(V3).
+selected(invalid) :- neq(V0,V1), neq(V1,V0), col(V0,V2), col(V1,V2), value(V0,V3), value(V1,V3), cell(V0), cell(V1), col(V2), num(V3).
+\end{lstlisting}
+These rules are clearly correct as they outline that no row, block or column can have two of the same digits.
+
+
+All in all, the Prob-FF-NSL performs well, having a perfect true test score in spite of 70\%/80\% of examples under a distribution shift for the sudoku problems.
+However, it performs slightly worse than the FF-NSL method on this particular task. 
+The advantage of the FF-NSL approach is that it assigns more importance to training examples that are not under the distribution shift.
+But, the Prob-FF-NSL also accounts for the non-maximum predictions in its training, so the slight difference may only be down to the random seeds used when sampling.
+Finally, the FF-NSL models performed much better than the others as they incorporated background knowledge.
 
 
 \subsection{Concept Bottleneck Pipeline}
@@ -624,37 +700,60 @@ We also test the presented Prob-NSL framework within the context of a concept bo
 The architecture that the Prob-NSL model used for this task is presented in \ref{change-to-the-concept-bottleneck-architecture}.
 
 As baselines, we compare the model to an end-to-end network and the concept bottleneck model with identical architectures.
-The latter is the same model that is used for the concept prediction for the Prob-NSL model.
+The latter is the same model used for the concept prediction for the Prob-FF-NSL model.
 
 Their results are summarised in the table below:
 
 \begin{center}
-\begin{tabular}{ |M{3cm}||M{3cm}|M{3cm}|M{3cm}|  }
+\begin{tabular}{ |M{3cm}|M{3cm}|M{3cm}|  }
  \hline
- \multicolumn{4}{|c|}{Accuracy Comparison} \\
+ \multicolumn{3}{|c|}{Test Accuracy Comparison} \\
  \hline
  \hline
-  & End-to-end model&Concept bottleneck model & Prob-NSL concept bottleneck \\ 
+  End-to-end model&Concept bottleneck model & Prob-NSL concept bottleneck \\ 
  \hline
- Train & X $\pm$ X & X $\pm$ X & 0.922 $\pm$ 0.021 \\
- Test & 0.687 $\pm$ 0.004 & 0.685 $\pm$ 0.005 & 0.910 $\pm$ 0.023 \\
+ 0.687 $\pm$ 0.004 & 0.685 $\pm$ 0.005 & 0.910 $\pm$ 0.023 \\
  \hline
 \end{tabular}
 \end{center}
 
 The Prob-NSL model greatly outperforms the other two with ~33\% test higher test set accuracy.
-The results could have been even higher if there the concept bottleneck model is able to distinguish between \emph{strike} and \emph{ball} well.
-In some instances, the model predicts a \emph{strike} in every case where there is a \emph{strike}.
+The results could have been even higher if the concept bottleneck model could distinguish between the labels \emph{strike} and \emph{ball} well.
+In some instances, the model predicts a \emph{strike} in every case where the true label was \emph{ball}.
 When the model learns well enough to distinguish between the two, the accuracy jumps to values as high as 96\%.
+
+A learned solution can be post-processed into the following form:
+\begin{lstlisting}
+conds(strike) :- concept("The batter fouled it.").
+conds(strike) :- concept("The batter hit the ball into foul territory."), concept("The ball was."), concept("The batter did not swing.").
+conds(strike) :- concept("The batter made contact."), concept("The batter missed."), concept("The umpire called it a ball.").
+conds(strike) :- concept("The batter did not swing."), concept("The ball was hit.").
+conds(strike) :- concept("It was a strike."), concept("The batter did not swing.").
+conds(foul) :- concept("It was outside the strike zone."), concept("The batter hit a fly ball.").
+conds(foul) :- concept("The batter hit the ball into foul territory."), concept("The umpire called it a ball.").
+conds(foul) :- concept("The batter hit the ball for a foul ball."), concept("The batter did not swing.").
+conds(foul) :- concept("The batter hit the ball into foul territory."), concept("The batter hit the ball.").
+conds(out) :- concept("The batter hit a fly ball."), concept("It hit the ground.").
+conds(out) :- concept("The batter hit the ball for a foul ball."), concept("It was caught.").
+conds(play) :- concept("The batter hit the ball in the air.").
+\end{lstlisting}
+
+At test time, the solver returns the head of the first rule whose rule body is satisfied if reading the rules from top to bottom.
+If none of these rules is matched, the \emph{ball} label is returned.
+Such an interpretation allows for a clear link between the concepts and the final labels.
+
+However, inspecting the solution shows that it does not follow baseball logic precisely. For example, the concept \emph{the batter fouled it} should not result in a strike.
+The most likely cause of this result is that the neural network does not learn concepts as intended but instead uses them as proxies to incorporate its features.
+With this in mind, we attribute the difference in performance to the concept prediction architecture of the original models, which only has a single linear layer.
+
 
 \section{Discussion}
 
-The proposed logic based classification method, working extremely well as a part of the concept bottleneck pipeline.
-It outperforms the approach from Chapter \ref{concept-bottleneck-pipeline}.
+The proposed logic-based classification method works well but fails to learn an interpretably correct solution. It does not follow human logic.
+To account for this issue, we should improve upon the concept prediction pipeline, which currently has a precision of 17.5\%.
 
-% INSERT Online Symbolic Learning of Policies for Explainable Security reference
-The method could be further improved, such as setting different penalties on examples that we care more about being satisfied.
-Moreover, the approach for choosing a prior chosen may not be flexible enough for all possible applications.
-Incorporating the configurable prior approach shown in X would have a lot of benefit for some applications.
+In general, the performance of the logic-based classification method on its own could further be improved by, for example, incorporating the example importance into the choice of the parameters.
+Moreover, the approach for choosing a prior may not be flexible enough for all possible applications.
+Incorporating the configurable prior approach shown by Drozdov et al. \cite{RefWorks:RefID:67-drozdov2021online} would have a lot of benefit for some applications.
 
 % TODO: Luke feedback -random forest -feature importance - how often a predicate gets used to make a prediction 

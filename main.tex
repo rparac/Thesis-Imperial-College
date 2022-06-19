@@ -50,6 +50,10 @@
 % Example numbering
 \usepackage{amsthm}
 
+% Additional maths symbols
+\usepackage{mathtools}
+\def\multiset#1#2{\ensuremath{\left(\kern-.3em\left(\genfrac{}{}{0pt}{}{#1}{#2}\right)\kern-.3em\right)}}
+
 % Enumerate examples
 \theoremstyle{definition} % Use normal font for examples
 \newtheorem{example}{Example}
@@ -72,13 +76,31 @@
 % Needs to answer questions: Why? What? How? What are the outcomes?
 
 \begin{abstract}
+For most tasks, end-to-end neural networks are undisputedly the best performing and most widely used models in machine learning.
+However, they are mostly uninterpretable, making them tricky to apply in a high-risk environment.
+Choosing an interpretable model, on the other hand, would yield a decrease in performance.
 
-The abstract will go here
+Recent work on concept bottleneck models \cite{RefWorks:RefID:35-koh2020concept} has managed to design a neural network model which overcomes this issue.
+It allows reasoning about a prediction with high-level concepts whilst achieving a competitive accuracy as its end-to-end counterpart.
+These concepts, however, need to be manually engineered and labelled to achieve such results.
+
+In this project, we improve the concept bottleneck design by automatically mining concepts from text explanations and improving their interpretability.
+To do so, we design a domain-independent concept mining framework using the state-of-the-art approaches from Inductive Logic Programming, Natural Language Processing and Deep Learning.
+We showcase that the new framework is a lot better at finding useful concepts than its predecessor, developed by Jeyakumar et al. \cite{RefWorks:RefID:16-2021automatic}, capturing twice as much information about the final labels.\\
+In addition, we show that Inductive Logic Programming can be an effective framework for tackling sequence-to-sequence NLP tasks with few available examples, as we achieved Jaccard Index values of 0.55 and 0.85 for two challenging tasks. \\
+Finally, to improve the concept bottleneck explainability, we designed a fully interpretable probabilistic logic-based classification framework. It even outperformed the current end-to-end approaches for the MLB-V2E and the sudoku grid validity datasets.
+
 \end{abstract}
 
 \renewcommand{\abstractname}{Acknowledgements}
 \begin{abstract}
-The acknowledgements will go here
+I would like to express my sincere gratitude to my supervisors Dr. Luke Dickens and Dr. Alessandra Russo, for their academic guidance throughout this process.
+They helped me tremendously with their immense knowledge and commitment, and I am grateful to have had them as my supervisors.
+
+My thanks and appreciations also go to my colleagues and friends, who have been a constant source of motivation and have enriched my student life.
+
+Fundamentally, I am beyond grateful to my family. The completion of my studies could not have been possible without their unwavering support, love and encouragement.
+
 \end{abstract}
 
 

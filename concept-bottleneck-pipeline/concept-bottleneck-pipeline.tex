@@ -2,22 +2,6 @@
 \label{concept-bottleneck-pipeline}
 
 
-% TODO: a introduction to this chapter is useful
-% Need to talk about what concept is here
-
-% Things I need to include for Vikranth
-%   precision values
-%   concepts -> prediction MLP (both old and new)
-%   maybe text classification
-
-% What is a concept bottleneck pipeline?
-%  - similar results when forcing learning through concepts
-%  - interpretability (human-interpretable concepts)
-
-% We build upon this idea by mining concepts from video explanations in lieu of human-generated ones.
-% In this section, we show how we have improved upon the concept bottleneck pipeline idea.
-
-
 Despite their tremendous success in recent years, end-to-end neural networks suffer from their black-box nature.
 They enable approximation of unknown functions exceptionally well but provide no interpretation of the actual function being approximated.
 The reasoning behind decision-making is almost a necessity in high-risk environments, such as the medical domain, where an error is extremely costly.
@@ -57,8 +41,8 @@ This chapter itself is a continuation of the ideas proposed by Jeyakumar et al. 
 
 The main contribution by Jeyakumar et al. is the \emph{Concept Discovery and Extraction Module} (CoDEx), a module that automatically uses explanations to extract text concepts.
 That module has been applied to the MLB-V2E dataset, a baseball video dataset with explanations. \\
-The architecture involving the \emph{Concept Discovery and Extraction Module} is shown in \ref{vikranth-concept-bottleneck}. 
-In general, it is very similar to the standard architecture of the concept bottleneck architecture shown in \ref{original-concept-bottleneck} only with the CoDEx module replacing the true present concepts.
+The architecture involving the \emph{Concept Discovery and Extraction Module} is shown in figure \ref{vikranth-concept-bottleneck}. 
+In general, it is very similar to the standard architecture of the concept bottleneck architecture shown in figure \ref{original-concept-bottleneck} only with the CoDEx module replacing the true present concepts.
 
 \begin{figure}[h]
 \caption{Schematic representation of the concept bottleneck pipeline presented by Jeyakumar et al. (adapted from \cite{RefWorks:RefID:16-2021automatic})} 
@@ -135,8 +119,8 @@ To extract the concept sentences from an atomic sentence, we use a solution lear
 The \textbf{simple pruning} stage, included between \textbf{generalisation} and \textbf{grouping} stage, is the simplest out of any of the steps present. 
 It removes the concept if it fails to occur at least three times in the dataset.
 The sole reason for including this stage is to speed up the subsequent steps because it slightly reduces the overall performance of the pipeline.
-% INSERT reference to bird-flowers dataset
-CoDEx pipeline for the bird-flowers dataset (\ref{applicability-in-other-domains}) takes less than an hour when the \textbf{simple pruning} stage is not included, which increases to over 10 hours without it.
+% INSERT reference to bird-flowers dataset DONE
+CoDEx pipeline for the bird-flowers dataset \cite{RefWorks:RefID:69-wah2011caltech-ucsd} (\ref{applicability-in-other-domains}) takes less than an hour when the \textbf{simple pruning} stage is not included, which increases to over 10 hours without it.
 This stage is only included when the CoDEx pipeline takes too long to compute otherwise because it is lossy.
 
 The diagram summarising the new concept bottleneck pipeline is shown in figure \ref{full-architecture-diagram}.
@@ -149,8 +133,8 @@ The diagram summarising the new concept bottleneck pipeline is shown in figure \
 \label{full-architecture-diagram}
 \end{figure}
 
-% INSERT Do cocnept bottlenecks learn as intended
-There were recent concerns about the joint training procedure not truly accounting for concepts in their final predictions. 
+% INSERT Do cocnept bottlenecks learn as intended DONE
+There were recent concerns about the joint training procedure not truly accounting for concepts in their final predictions \cite{RefWorks:RefID:68-margeloiu2021concept}. 
 So, we also attempt to use the sequential training procedure, isolating the training of concept and label prediction parts of the network.
 Such a training procedure should perform similarly \cite{RefWorks:RefID:35-koh2020concept}, so we expect the similar results.
 
@@ -162,12 +146,12 @@ To keep concept bottleneck pipelines easily comparable, we prune the concepts su
 This number was a desirable value for the original concept bottleneck pipeline \cite{RefWorks:RefID:16-2021automatic}.
 
 Each concept bottleneck model is also trained using both joint and sequential models, unlike the \ref{inherited-work} which only uses the joint model.
-% INSERT: Cite "do concept bottleneck models work as intended"
+% INSERT: Cite "do concept bottleneck models work as intended" DONE
 The difference between the two is that the joint optimises losses for both concepts and labels simultaneously, which sometimes overrules the nature of the concept bottleneck pipeline.
-The sequential training model freezes the learned concept prediction layers, so the model must determine the final label from the concept predictions themselves.
+The sequential training model freezes the learned concept prediction layers, so the model must determine the final label from the concept predictions themselves \cite{RefWorks:RefID:68-margeloiu2021concept}.
 
-% INSERT The caltech-ucsd birds-200-2011 dataset, Automated flower classification over a large number of classes
-Also, we evaluate the concept bottleneck model on a new birds-flowers dataset, which combines randomly selected images from the CUB-200-2011 and 102 Category Flower Dataset along with their descriptions.
+% INSERT The caltech-ucsd birds-200-2011 dataset, Automated flower classification over a large number of classes DONE
+Also, we evaluate the concept bottleneck model on a new birds-flowers dataset \cite{RefWorks:RefID:69-wah2011caltech-ucsd}, which combines randomly selected images from the CUB-200-2011 and 102 Category Flower Dataset along with their descriptions.
 This evaluation inspects how well the concept bottleneck pipeline translates to different domains.
 
 Finally, we will critically analyse the strengths and limitations of the implemented method and suggest areas for future improvement.
@@ -184,7 +168,7 @@ In general, the new method seems to extract concepts which better describe the l
 
 \subsubsection{Measuring Cumulative MI}
 
-% INSERT ref MacKay book; maybe insert Venn diagram from Wikipedia.  
+% INSERT ref MacKay book; maybe insert Venn diagram from Wikipedia.   DONE (not the wiki bit)
 Mutual Information $I(X;Y)$ \cite{RefWorks:RefID:30-mackay2004information} is defined as $I(X; Y) \equiv H(X) - H(X|Y)$. 
 It estimates the average reduction in uncertainty about $x$ caused by understanding $y$'s value or vice versa. 
 It is the average quantity of information conveyed by $x$ regarding $y$.
@@ -240,8 +224,8 @@ The maximum possible accuracies are summarised in the table below:
 The highest possible accuracy with the new concept extraction for training and the test set is much greater than the values achievable with the old procedure.
 
 To validate these results translate into practice, we train an MLP classification model from binary vectors to labels with both old and new concept extraction.
-% INSERT reference RoBERTa
-In addition, a RoBERTa transformer model is trained directly from an unedited human-generated explanation to estimate how much information is lost through concept extraction.
+% INSERT reference RoBERTa DONE
+In addition, a RoBERTa transformer model \cite{RefWorks:RefID:84-liu2019roberta:} is trained directly from an unedited human-generated explanation to estimate how much information is lost through concept extraction.
 % INSERT: figure comparing transformer MLP with 
 The results are presented in the figure \ref{from-concepts-accuracy-comparison}.
 
@@ -289,8 +273,8 @@ To understand why that is the case, we need to consider the precision values of 
 % TODO: analysis of the resutls
 The concept predictions are extremely poor compared to the final results.
 So, it is clear that concepts serve more as proxies for holding NN final prediction information instead of genuinely being learned by the network.
-% INSERT Do concept bottleneck learn as intended.
-This statement is backed up by the fact that old concept prediction even outperforms the prediction results directly from concepts, which would not have been possible in an actual concept bottleneck model (X).
+% INSERT Do concept bottleneck learn as intended. DONE
+This statement is backed up by the fact that old concept prediction even outperforms the prediction results directly from concepts, which would not have been possible in an actual concept bottleneck model (X) \cite{RefWorks:RefID:68-margeloiu2021concept}.
 
 To force the concept bottleneck nature of the model, we use the sequential training approach for the following experiments.
 Such an approach first trains the concept prediction part of the network before training the network from concept predictions to final labels.
@@ -421,8 +405,8 @@ So, the poor precision value may not not necessarily hurt explanations, but rath
 % TODO: finish
 
 As argued, the idea presented in this section in theory is not tied to video applications.
-% INSERT The caltech-ucsd birds-200-2011 dataset, Automated flower classification over a large number of classes, if I can reference descriptions
-In this evaluation, we measure how well does the CoDEx module fare when applied to a birds-flowers dataset.
+% INSERT The caltech-ucsd birds-200-2011 dataset, Automated flower classification over a large number of classes, if I can reference descriptions DONE
+In this evaluation, we measure how well does the CoDEx module fare when applied to a birds-flowers dataset \cite{RefWorks:RefID:87-wah2011caltech-ucsd}.
 This dataset consists of 2000 birds/flowers images taken from X and X, combined with image descriptions generated for these respective datasets.
 As such, the explanations are written such that they describe the image, rather than the label.
 % INSERT ref results compared to 
@@ -451,7 +435,7 @@ All the extracted concepts are included in Appendix X, along with frequencies of
 To validate whether the initial observations translate to tangible results, we evaluate how well can an MLP predict the final result.
 The input to will concept prediction vectors produced by old and new CoDEx modules.
 % INSERT reference RoBERTa
-To estimate how much information is lost by mining concepts, the results are compared against a fine-tuned RoBERTa transformer trained directly from text.
+To estimate how much information is lost by mining concepts, the results are compared against a fine-tuned RoBERTa transformer trained directly from text \cite{RefWorks:RefID:84-liu2019roberta:}.
 
 \begin{center}
 \begin{tabular}{ |M{4cm}||M{3cm}|M{3cm}|M{3cm}|  }
