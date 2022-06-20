@@ -8,7 +8,7 @@ However, just because concepts are predicted does not mean they are indeed used 
 For example, a network may learn a pattern which predicts a label \emph{out}, if some concept has a value greater than 0.2.
 Yet, the model would not show such a concept to the user as relevant for the final prediction.
 As we have done in the Chapter \ref{concept-bottleneck-pipeline}, showcasing the concepts after the attention layer would present the concepts more relevant for the final prediction.
-Still, the attention layer showcases the weight each concept has in the final prediction, but not the logic the MLP uses to choose the final label.
+Still, the attention layer presents the weight each concept has in the final prediction, but not the logic the MLP uses to choose the final label.
 
 A fully interpretable method for predicting the final label would provide a clear link between the concepts and the outcomes.
 In addition, models from concepts to the label can be validated and should, in an ideal case, follow the same logic as humans.
@@ -35,15 +35,14 @@ An introduction of the rule learning component would result in the change in the
 Training a concept bottleneck pipeline then turns into a 3-step process:
 \begin{enumerate}
     \item Train a model in the same manner as in the Chapter \ref{concept-bottleneck-pipeline}, by minimising the loss CoDEx concept vector and final label prediction loss.
-    \item Generate examples for the rule-learning component using the concepts predicted by the model from step 1). Each example needs to take into account the probabilities of all concepts.
+    \item Generate examples for the rule-learning component using the concepts predicted by the model from the step 1). Each example needs to take into account the probabilities of all concepts.
     \item Train the rule-learning component.
 \end{enumerate}
 
 At run-time, predict the concepts using the model trained in step 1 before applying the rules learned in step 3 to obtain the final prediction.
 
-The ILP paradigm does not support any notion of probability; an atom can either be in or out of an answer set. 
-% INSERT FF-NSL reference DONE
-So, to force the learner to treat less likely cases differently, we carefully choose the FastLAS example penalties, similar to \cite{RefWorks:RefID:71-cunnington2021ff-nsl:}.
+The ASP paradigm does not support any notion of probability; an atom can either be in or out of an answer set. 
+So, to force the learner to treat less likely cases differently, we carefully choose the FastLAS example penalties, similar to Cunnington et al. \cite{RefWorks:RefID:71-cunnington2021ff-nsl:}.
 However, we aim to use those penalties to find the most likely solution.
 
 \section{Choosing FastLAS Parameter Values}
@@ -129,7 +128,6 @@ Now we can estimate the expectation by sampling $I$ ground examples for example 
 \approx \frac{1}{I} \sum_{i=1}^{I} \ln  p(y_e|\vec{z}_i,H) \label{sampling-result}
 \end{align}
 
-
 For some hypothesis, $H\in \curly{H}$, a grounded example is or is not covered by $H$. We allow a label to be incorrect with some small error $\epsilon > 0$, resulting in the following probabilistic interpretation:
 \begin{align}
 p(y_e | \vec{z}, H) =
@@ -181,7 +179,7 @@ Hence, by setting the penalty for each example to $-\frac{1}{I} \ln \left ( \fra
 \subsubsection{Integer penalties}
 \label{integer-penalties}
 
-FastLAS does not support any floating point number calculations, including penalty values.
+FastLAS does not support any floating point number calculations, including penalty values, making the expression derived above unusable.
 
 But, we can overcome this issue.
 Let us consider a large value $K \in \reals^+$, and then round $K$ multiplied by each term in the sum to the nearest integer. Because for large enough $K$:
@@ -254,10 +252,10 @@ H_{\text{MAP}}
 There are several ways to place a prior on hypothesis space. 
 The default ILASP \cite{RefWorks:RefID:18-law2020ilasp} and the usual FastLAS approach assign smaller penalties, i.e., higher prior probabilities, to shorter clauses.
 % INSERT online symbolic learning of policies for explainable security DONE
-Some problems benefited from assigning lower penalties to "ideal length" rules, such as  \cite{RefWorks:RefID:67-drozdov2021online}.
+Some problems benefited from assigning lower penalties to "ideal length" rules, such as Drozdov et al. \cite{RefWorks:RefID:67-drozdov2021online}.
 
-We have opted for a slightly different approach. \\
-Starting with a set of potential rules $\curly{R}$, let $q_r$ be an independent probability that $r$ is included in $H$ (written $r \in H$) for every potential rule $r \in \curly{R}$. Then the prior is written as:
+We have opted for a slightly different approach that we can incorporate well into the theory presented thus far. \\
+Starting with a set of potential rules $\curly{R}$, let $q_r$ be an independent probability that $r$ is included in $H$ (written $r \in H$) for every potential rule $r \in \curly{R}$. Then the prior probability can be written as:
 \begin{align}
 p(H) = \left(\prod_{r \in H} q_r\right)\left(\prod_{r \in \curly{R}\setminus H} (1-q_r)\right)
 \end{align}
@@ -324,7 +322,7 @@ To prevent that possibility from occurring, the following types of ASP rules are
 \begin{itemize}
     \item Choice rules --- Choice rules give rise to multiple answer sets, which we do not want.
     \item "Not-chain" --- Combination of normal rules which can only be satisfied by multiple answer sets, such as \verb+{p :- not q. q :- not p.}+. The program satisfying the "non-chain" requirement is stratified. This means that its rules can be split into disjoint multiple strata $P = P_0 \cup P_1 \cup ... \cup P_n$ where each strata $P_i$ can only have negations of atoms defined in $P_0 \cup ... \cup P_{i-1}$.
-    \item Constraints --- Constraints are used to eliminate an answer from occurring. If we were to remove the single occurring answer set, we would not get a solution.
+    \item Constraints --- Constraints are used to eliminate an answer set from occurring. If we were to remove the single occurring answer set, we would not get a solution.
 \end{itemize}
 
 An alternative to this encoding which would return a solution with the highest score is also possible. However, it is not nearly as interpretable.
@@ -456,7 +454,7 @@ That label should be true only when an example contains two digits written to th
 The following steps are needed to solve the task using the presented multi-label classification encoding:
 
 1. \textit{Construct the background knowledge:} \\
-The background is the same as for example \ref{sudoku-binary-example}.
+The background is the same as for the example \ref{sudoku-binary-example}.
 
 2. \textit{Add the multi-label selection encoding to the background:} \\
 We add the following rules to the background knowledge:
@@ -522,10 +520,10 @@ To account for FastLAS's inability to deal with probabilistic atoms, we need to 
 The constants $K, I,$ and $\epsilon$ are currently set to $1000, 100$ and $0.01$, respectively.
 
 We further need to encode the prior (hypothesis) penalties.
-Any custom-defined FastLAS scoring must be decomposable \ref{fastlas-background}, and we can only directly input the scoring function decomposition as FastLAS code.
+Any custom-defined FastLAS scoring must be decomposable (\ref{fastlas-background}), and we can only directly input the scoring function decomposition as FastLAS code.
 Recall that the scoring function decomposition we wish to encode is given by $\curly{S}^{rule}(r, T) = K \left (\ln (n_l - m_l) - \ln m_l  \right)$.  \\
 % INSERT reference scoring function background which should include the simplest example.
-As mentioned in X, defining a scoring function decomposition is done by defining the predicate \verb_penalty/2_. Any logic related to \verb_penalty/2_ is defined with atoms \verb+in_head/1+ and \verb+in_body/1+ which contain all the head and body predicates of a rule $r$.
+As mentioned in \ref{fastlas-background}, defining a scoring function decomposition is done by defining the predicate \verb_penalty/2_. Any logic related to \verb_penalty/2_ is defined with atoms \verb+in_head/1+ and \verb+in_body/1+ which contain all the head and body predicates of a rule $r$.
 Using FastLAS's ASP syntax, we define the \verb_penalty_ predicate by looking up the penalty value for a rule of a certain length, or assign an extremely large value for undefined length-penalty pairs:
 \begin{lstlisting}
 #bias("
@@ -573,7 +571,7 @@ If we set the values for constants $K, I,$ and $\epsilon$ to $1000, 100$ and $0.
 
 3. Generate the prior penalties.
 Choosing the values for parameters $m_l$ is done through empirical evaluation, while $n_l$ is determined from a language bias.
-The former is the number of rules of length $m_l$ that we expect in a final solution, while the latter is the total number of rules with length $l$ from a current language bias.
+The former is the number of rules of length $m_l$ that we expect in a final solution, while the latter is the total number of rules with length $l$ from the current language bias:
 
 \begin{verbatim}
 #modeh(selected(invalid)).
@@ -591,7 +589,7 @@ selected(invalid) :- row(V3,V4); value(V1,V2).
 selected(invalid) :- row(V1,V3); value(V1,V2).
 \end{verbatim}
 They need to be defined so that their types match, are unique, and are not trivially replaceable by another rule.
-The last requirement means that we do not allow rules such as $selected(invalid) \text{:-} row(V1, V3), row(V2, V4)$ since row(1, 1) would make this rule true.
+The last requirement means that we do not allow rules such as $selected(invalid) \; \text{:-} \; row(V1, V3), row(V2, V4)$ since row(1, 1) would make this rule true.
 
 Setting empirically determined values $m_1 = m_2 = 1$, results in the following hypothesis penalties.
 \begin{lstlisting}
@@ -602,8 +600,8 @@ pen(L, 100000000000) :- L = #count{X : in_head(X); X : in_body(X)},
     L >= 3.
 \end{lstlisting}
 
-The values for parameters $n_l$ are in practice approximated using $\binom{r}{l}$, the number of possible selections of l predicates from r \#modeb definitions.
-Note that this approximation is completely accurate when we only have constant \#modeb, which is the case for the concept bottleneck pipeline.
+The values for parameters $n_l$ are in practice approximated using $\binom{r}{l}$, the number of possible selections of l predicates from r \verb_#modeb_ definitions.
+Note that this approximation is completely accurate when we only have constant \verb_#modeb_ declarations, which is the case for the concept bottleneck pipeline.
 
 Further extensions to this system should make this value more accurate, but it did not hurt performance.
 
@@ -676,7 +674,7 @@ The results for sudoku 9x9, presented in \ref{sudoku9x9-results}, show similar r
 \label{sudoku9x9-results}
 \end{figure}
 
-The main difference in performance is present for the random forest and CNN-LSTM baseline models, which failed to learn a solution.
+The main difference in performance is present for the random forest and CNN-LSTM baseline models, which failed to learn a good solution.
 
 The model returned the following rules in all cases where the true test accuracy was 100\%:
 \begin{lstlisting}
@@ -717,7 +715,7 @@ Their results are summarised in the table below:
 \end{tabular}
 \end{center}
 
-The Prob-NSL model greatly outperforms the other two with ~33\% test higher test set accuracy.
+The Prob-NSL model greatly outperforms the other two with 33\% test higher test set accuracy.
 The results could have been even higher if the concept bottleneck model could distinguish between the labels \emph{strike} and \emph{ball} well.
 In some instances, the model predicts a \emph{strike} in every case where the true label was \emph{ball}.
 When the model learns well enough to distinguish between the two, the accuracy jumps to values as high as 96\%.
@@ -742,18 +740,19 @@ At test time, the solver returns the head of the first rule whose rule body is s
 If none of these rules is matched, the \emph{ball} label is returned.
 Such an interpretation allows for a clear link between the concepts and the final labels.
 
-However, inspecting the solution shows that it does not follow baseball logic precisely. For example, the concept \emph{the batter fouled it} should not result in a strike.
+However, inspecting the solution shows that it does not always follow baseball logic precisely. For example, the concept \emph{the batter fouled it} should not result in a strike.
 The most likely cause of this result is that the neural network does not learn concepts as intended but instead uses them as proxies to incorporate its features.
 With this in mind, we attribute the difference in performance to the concept prediction architecture of the original models, which only has a single linear layer.
 
 
 \section{Discussion}
 
-The proposed logic-based classification method works well but fails to learn an interpretably correct solution. It does not follow human logic.
+The proposed logic-based classification method works well but fails to learn an interpretably correct solution for the concept bottleneck model. Some cases do not 
+follow human logic.
 To account for this issue, we should improve upon the concept prediction pipeline, which currently has a precision of 17.5\%.
 
 In general, the performance of the logic-based classification method on its own could further be improved by, for example, incorporating the example importance into the choice of the parameters.
 Moreover, the approach for choosing a prior may not be flexible enough for all possible applications.
-Incorporating the configurable prior approach shown by Drozdov et al. \cite{RefWorks:RefID:67-drozdov2021online} would have a lot of benefit for some applications.
+Incorporating the configurable prior approach shown by Drozdov et al. \cite{RefWorks:RefID:67-drozdov2021online} would have a lot of benefit in some cases.
 
 % TODO: Luke feedback -random forest -feature importance - how often a predicate gets used to make a prediction 

@@ -7,7 +7,7 @@
 
 Answer Set Programming  \cite{RefWorks:RefID:1-lifschitz2008answer} is a form of declarative programming with a Prolog-like syntax suitable for solving NP-hard search problems.
 However, it is based on a different computation mechanism than Prolog: stable model semantics \cite{RefWorks:RefID:21-fitting1992michael}.
-Answer set solver is a program that generates stable models of an answer set program, which are solutions of an answer set program. 
+Answer set solver is a program that generates stable models of an answer set program, which are the solutions of an answer set program. 
 The chosen answer set solver used throughout this project is clingo \cite{RefWorks:RefID:22-clingo}.
 
 This section will briefly highlight the syntax of the answer set programs and the stable model semantics.
@@ -22,7 +22,7 @@ Here are the types of rules in ASP\footnote{Disjunctive rules also exist, but th
  
  3. \emph{choice rule} $\righarrow$ $lb\{h_1; ..., h_m\}ub\; \text{:-} \;  b_1, b_2, ..., b_n, not\; n_1, not\; n_2, ..., not\; n_o$
  
-where $lb, ub$ are integers, $n_1,...,n_o$ are atoms and $b_1, ...,b_n$ are either atoms or aggregates.
+where $lb, ub$ are integers, $h_1,..., h_m, n_1,...,n_o$ are atoms and $b_1, ...,b_n$ are either atoms or aggregates.
 
 Aggregates have the following syntax $lb\#agg\{e_1; ...; e_n\}ub$ where $lb, ub$ are ints, $agg$ is an aggregate function (e.g. $sum$) and $e_i$ is an aggregate element.
 Additionally, aggregate element has the form  $t_1, ..., t_k : c_1, ..., c_j$ where $t_i$ is a term and $c_i$ is a literal.
@@ -81,7 +81,7 @@ Constructing the reduct of a \textbf{choice rule} has an additional step.
 It is turned into either normal rules or a constraint.
 Given a possible interpretation $X$, the choice rule $lb\{h_1; ..., h_m\}ub\; \text{:-} \;  b_1, b_2, ..., b_n, not\; n_1, ..., not\; n_o$ is converted in a following manner:
 
-1. if $ lb \leq |\{h_1; ...; h_m\} \cap X| \leq ub$ then $h_i \text{:-} \;  b_1, b_2, ..., b_n, not\; n_1, ..., not\; n_o$ for is created for each $i \in \{1..m\}$
+1. if $ lb \leq |\{h_1; ...; h_m\} \cap X| \leq ub$ then $h_i \; \text{:-} \;  b_1, b_2, ..., b_n, not\; n_1, ..., not\; n_o$ for is created for each $i \in \{1..m\}$
 
 2. Otherwise, a constraint of the form $ \text{:-} \;  b_1, b_2, ..., b_n, not\; n_1, not\; n_2, ..., not\; n_o$ 
 is created.\\
@@ -117,16 +117,16 @@ To understand the ILASP system fully, a few more definitions need to be introduc
 An atom A is \textbf{bravely entailed} if by a logic program P if it is included (true) in at least one answer set of P. 
 On the other hand, an atom A is \textbf{cautiously entailed} if it is included (true) in all answer sets of P.
 
-A pair $E = \langle E^{inc}, E^{exc} \rangle $ (<inclusions, exclusions>) is a partial interpretation of sets of literals.
+A pair $E = \langle E^{inc}, E^{exc} \rangle $ ($\langle$inclusions, exclusions$\rangle$) is a partial interpretation of sets of literals.
 Answer set X extends E iff set of inclusions is a subset of X ($E^{inc} \subseteq X$) and X is disjoint with exclusions ($E^{exc} \cap A = \emptyset$).
 
 
-The \textbf{language(inductive) bias} M, is a a pair $<M_h, M_b>$ which is used to construct the \textbf{search space} $S_M$ of a learning task.
+The \textbf{language(inductive) bias} M, is a a pair $\langle M_h, M_b \rangle$ which is used to construct the \textbf{search space} $S_M$ of a learning task.
 The rule of the form  \\$ h \;\text{:-} \; b_1, b_2, ..., b_n, not\; n_1, not\; n_2, ..., not\; n_o$ is in $S_M$ iff:
 \begin{enumerate}
     \item $h$ is compatible with $M_h$. This either means that $h$ is an atom compatible with $M_h$, an aggregate $lb\{h_1,.., h_m\}ub$ where each atom $h_i$ is compatible with $M_h$ or $h$ is empty.
     \item $b_i$ and $n_i$ are compatible with $M_b$.
-    \item no variable does not appear in at least one element  of a positive body literal (the rule is safe). \\ 
+    \item every variable appears in at least one positive body literal (the rule is safe). \\ 
 \end{enumerate}
 Understanding what compatible refers to in the previous definition is the easiest through the means of an example.
 
@@ -146,13 +146,13 @@ Understanding what compatible refers to in the previous definition is the easies
 \end{verbatim}
 
 The example above is a possible definition of the inductive bias for the simple coin problem written in ILASP-compatible syntax.
-The \#modeh directive specifies that an atom can occur in the head of the rule. In this case, it defines that $heads(X)$ is compatible with $M_h$.
-Similarly, the \#modeha defines that an atom can occur in the aggregate of the rule. Hence, it determines that  $lb\{..., heads(X), ...\}ub$ is a head compatible to $M_h$.
-The \#modeb syntax defines that an atom can occur in the body either as a positive or negative atom.
-Finally, the \#constant defines constants that can replace const functions.
+The \verb+#modeh+ directive specifies that an atom can occur in the head of the rule. In this case, it defines that \verb+heads(X)+ is compatible with $M_h$.
+Similarly, the \verb+#modeha+ defines that an atom can occur in the aggregate of the rule. Hence, it determines that  $lb\{..., heads(X), ...\}ub$ is a head compatible to $M_h$.
+The \verb+#modeb+ syntax defines that an atom can occur in the body either as a positive or negative atom.
+Finally, the \verb+#constant+ defines constants that can replace const functions.
 
-Let $S_M$ be the search space constructed from the language bias M, B background knowledge, $E^+$/$E^-$ set of positive/negative examples, T = $<B, S_M, E^+, E^->$ is the \textbf{learning from answer set task} ($ILP_{LAS}$) \cite{RefWorks:RefID:47-law2014inductive}.
-The hypothesis H is an inductive solution iff:
+Let $S_M$ be the search space constructed from the language bias M, B background knowledge, $E^+$/$E^-$ set of positive/negative examples, T = $\langle B, S_M, E^+, E^- \rangle$ is the \textbf{learning from answer set task} ($ILP_{LAS}$) \cite{RefWorks:RefID:47-law2014inductive}.
+A hypothesis $H$ is an inductive solution of that task iff:
 \begin{enumerate}
     \item It is a subset of search space $S_M$.
     \item For every negative example $e^-$, there is no answer set A of the program $B \cap H$ which extends that example.
@@ -191,7 +191,7 @@ This sum is also referred to as the score/penalty of the ILASP solution.
 \subsubsection{FastLAS}
 \label{fastlas-background}
 
-FastLAS is much more scalable with respect to hypothesis space size than ILASP, but the tasks it can solve are less general than ILASP's.
+FastLAS \cite{RefWorks:RefID:19-law2020fastlas:} is much more scalable with respect to hypothesis space size than ILASP, but the tasks it can solve are less general than ILASP's.
 Namely, the crucial reason for using both is FastLAS's inability to deal with tasks that have recursive rules \cite{RefWorks:RefID:82-law2021scalable}.
 
 However, FastLAS also allows specifying domain-specific optimisation criteria, unlike ILASP. 
@@ -224,19 +224,19 @@ The critical requirement of this project is to extract syntactic concept sentenc
 This section briefly overviews the techniques applied to make the concept extraction possible.
 
 The techniques presented in the following section are implemented by a popular library \emph{spacy} \cite{RefWorks:RefID:24-spacy} which has been utilised in this project. 
-The language model currently used throughout the project is \emph{en\_wb\_gl\_lg}, the most performant CPU-optimised option.
+The language model currently used throughout the project is \verb+en_wb_gl_lg+, the most performant CPU-optimised option.
 
 \subsection{Pre-processing/Post-processing Techniques}
 \label{nlp-processing-techniques}
 
-\textbf{Tokenisation} separates the given text into smaller units named \emph{tokens}. 
+\textbf{Tokenisation} \cite{RefWorks:RefID:28-jurafsky2014speech} separates the given text into smaller units named \emph{tokens}. 
 It is common to split English text into words as tokens, as they carry meaning and are easy to extract.
 The \emph{spacy} also extracts punctuation as separate tokens. \\
 
 \textbf{Sentence splitting} is a similar problem as tokenisation. It splits a text corpus into sentences before they are processed individually. \\
 
 % tag spacy PoS 
-\textbf{Part-of-speech tagging} attempts to determine which tag a word has in the sentence.
+\textbf{Part-of-speech tagging} \cite{RefWorks:RefID:28-jurafsky2014speech} attempts to determine which tag a word has in the sentence.
 The problem is much more complicated than the ones previously described as the part of speech can often be dependent on the meaning of the word in a sentence.
 For example, the sentence \emph{I play the main character in a play} highlights how the word \emph{play} can have two identically written words with different meanings and parts of speech.
 The first occurrence of \emph{play} is a verb, and the second is a \emph{noun}.
@@ -295,11 +295,11 @@ Constituency Parsing is a form of syntactic parsing which assigns a structure to
 This approach aims to group words into constituents, a group of words that behave as a single unit.
 For example, one may group a sequence of words surrounding a noun into a noun phrase such as \emph{the Imperial students}.
 Words grouped into constituents can be used as an intermediate form for semantic analysis and checking whether a sentence is grammatically correct.
-In the context of this project, it will be utilised as a part of atomic sentence extraction.
+In the context of this project, it was utilised by the inherited work presented in \ref{inherited-work}.
 
 
 The resulting structure produced by constituency parsing is a parse tree. 
-An example of a tree parsed by a constituency parser can be seen in \ref{constituency-graph}.
+An example of a tree parsed by a constituency parser can be seen in figure \ref{constituency-graph}.
 
 \begin{figure}[h]
 % https://parser.kitaev.io/

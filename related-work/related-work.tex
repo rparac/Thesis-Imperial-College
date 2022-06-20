@@ -9,7 +9,7 @@ There are a few popular datasets for video classification benchmarks out there, 
 The YouTube-8M \cite{RefWorks:RefID:10-abu-el-haija2016youtube-8m:} is an extensive benchmark for general video classification with around 8 million clips and 4800 visual entities.
 Mao et al. \cite{RefWorks:RefID:4-mao2019hierarchical} achieved very high performance on the YouTube-8M dataset using a deep convolutional graph neural network and a multi-level feature extractor.
 Kinetics-700 \cite{RefWorks:RefID:14-carreira2019short} dataset is the latest version of the popular Kinetics dataset, which contains 700 human action classes and around 650000 video clips.
-Yan et al. designed the top-performing model for the dataset, \cite{RefWorks:RefID:8-yan2022multiview} which uses Multiview Transformers for Video Recognition. 
+Yan et al. designed the top-performing model for the dataset \cite{RefWorks:RefID:8-yan2022multiview}, which uses Multiview Transformers for Video Recognition. 
 The core idea of this approach is to input multiple different "views" of an input video into a transformer model to achieve better results.
 This approach resulted in a model with a top-1 accuracy of 82.2\% and a top-5 accuracy of 95.7\% on the Kinetics-700 dataset.
 
@@ -52,7 +52,7 @@ Formal context K := (G, M, I) consists of a set of objects G, a set of attribute
 If (g, m) $\in$ I, object g has attribute m.
 Using these attributes, set A$' $ is defined containing all attributes common to the objects in a set of objects A.
 Additionally, set B$' $ contains objects with all attributes in the set of relations B.
-From these definitions, formal concept of context (G, M, I) is defined as a pair (A, B) such that A $\subseteq$ G, B $\subseteq$ M, B$' $ = A and A$' $ = B.
+From these definitions, formal concept of the context (G, M, I) is defined as a pair (A, B) such that A $\subseteq$ G, B $\subseteq$ M, B$' $ = A and A$' $ = B.
 
 The Formal Concept Analysis with text analysis is mainly used to construct the concept hierarchy, where a concept refers to a phrase containing two words.
 
@@ -63,7 +63,7 @@ This table is then used to extract hierarchical concepts.
 
 On the other hand, TaxoLearn \cite{RefWorks:RefID:34-dietz2012taxolearn} by Dietz et al. does not use Formal Concept Analysis but also extracts noun phrases as concepts. The relevance of noun phrases is checked by computing how often they appear in a particular context compared to others. TaxoLearn also uses a hierarchical clustering algorithm to construct a taxonomy.
 
-Moreover, approaches such as the one by Koh et al. \cite{RefWorks:RefID:35-koh2020concept} define concepts as properties that the image may have. These properties need to be provided beforehand.
+Moreover, approaches such as the one by Koh et al. \cite{RefWorks:RefID:35-koh2020concept} define concepts as properties that the image may have. These properties need to be manually-engineered beforehand.
 
 Finally, work such as the one by Fan et al. \cite{RefWorks:RefID:50-fan2004semantic} use expert defined terms, such as \emph{Lecture Presentation for Gastrointestinal Surgery}, as semantic concepts. 
 
@@ -115,26 +115,23 @@ The concepts in the work by Assari et al. are also predefined, but they represen
 The approach for learning presented in Chapter \ref{logic-based-classification} learns rules whilst accounting for uncertainty.
 
 % INSERT Probabilistic INDUCTIVE Logic programming
-Learning logical rules in an uncertain setting is closely related to the field of Probabilistic Inductive Logic Programming(X).
-% INSERT INDUCTIVE Logic Programming Luc de Raet
-The standard ILP aims to find a hypothesis $H$ such that the $covers(e, H, B)$ is true for all positive examples and false for all negative.
-The most popular way for defining $covers$ is in terms of the semantic entailment relation, i.e. $covert(e, H, B) = true$ iff $B \cup H \vDash e$.
-The Probabilistic ILP framework modifies the covers $covers(e, H, B)$ relation such that it becomes the probability that an example $e$ is covered given the hypothesis $H$ and background knowledge $B$.
+Learning logical rules in an uncertain setting is closely related to the field of Probabilistic Inductive Logic Programming \cite{RefWorks:RefID:73-raedt2008probabilistic}.
+The standard ILP aims to find a hypothesis $H$ such that the $covers(e, H, B)$ is true for all positive examples and false for all negative \cite{RefWorks:RefID:76-de2010inductive}.
+The most popular way for defining $covers$ is in terms of the semantic entailment relation, i.e. $covers(e, H, B) = true$ iff $B \cup H \vDash e$.
+The Probabilistic ILP framework modifies the covers $covers(e, H, B)$ relation such that it becomes the probability that an example $e$ is covered given the hypothesis $H$ and background knowledge $B$ ($P(e | H, B)$).
 
 % INSERT Probabilistic Rule Learning
-Focusing on the Probabilistic Rule Learning, ProbFOIL (X) is a system which targets ProbLog (X), a Prolog-like language which further allows clauses to be valid with some probability p.
+Focusing on the Probabilistic Rule Learning, ProbFOIL \cite{RefWorks:RefID:77-raedt2010probabilistic} is a system which targets ProbLog \cite{RefWorks:RefID:77-raedt2010probabilistic}, a Prolog-like language which further allows clauses to be valid with some probability $p$.
 ProbFOIL examples consist of facts associated with target probabilities that the rule-learner aims to achieve.
-% INSERT Inducing probabilistic relational rules from probabilistic examples
-A further extension of this system, ProbFOIL$^+$ (X), makes it possible to learn probability values and allows specifying the space of the possible clauses the system should search within.
-% INSERT Towards Structure Learning under the Credal Semantics
-Another extension of ProbFOIL is presented in X, where background knowledge can have negative loops.
+A further extension of this system, ProbFOIL$^+$ \cite{RefWorks:RefID:78-de2015inducing}, makes it possible to learn probability values and allows specifying the space of the possible clauses the system should search within.
+Another extension of ProbFOIL is presented in \cite{RefWorks:RefID:79-tuckey2020structure}, where background knowledge can have negative loops.
 
 However, all of these approaches are not nearly scalable enough for the problem in this thesis, mainly having been evaluated on small sets of examples.
 In addition, the presented approaches allow specifying the target probability for an example, which is not a requirement for this project.
 We need to produce as likely of a solution as possible, which for the ProbFOIL-like learners would mean that each example should have a target probability of 1.
 
 % INSERT reference NSL: ... AND FF-NSL: ...
-A much more scalable approach with a similar goal is presented by Cunnington et al. in NSL and FF-NSL papers.
+A much more scalable approach with a similar goal is presented in the NSL \cite{RefWorks:RefID:80-cunnington2020nsl:} and FF-NSL \cite{RefWorks:RefID:71-cunnington2021ff-nsl:} papers.
 It is related to the previously mentioned approaches as it also aims to determine a hypothesis given a set of probabilistic facts.
 Cunnington et al. wish to cover a set of examples generated by the neural network, whose correctness depends on the quality of the NN predictions.
 Each example consists of facts generated by multiple NN predictions.

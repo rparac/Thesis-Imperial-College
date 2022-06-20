@@ -76,19 +76,19 @@
 % Needs to answer questions: Why? What? How? What are the outcomes?
 
 \begin{abstract}
-For most tasks, end-to-end neural networks are undisputedly the best performing and most widely used models in machine learning.
+For most tasks, fully neural architectures are undisputedly the best performing and most widely used models in machine learning.
 However, they are mostly uninterpretable, making them tricky to apply in a high-risk environment.
 Choosing an interpretable model, on the other hand, would yield a decrease in performance.
 
-Recent work on concept bottleneck models \cite{RefWorks:RefID:35-koh2020concept} has managed to design a neural network model which overcomes this issue.
-It allows reasoning about a prediction with high-level concepts whilst achieving a competitive accuracy as its end-to-end counterpart.
+Recent work on concept bottleneck models \cite{RefWorks:RefID:35-koh2020concept} has managed to design a neural network model which overcomes the issue of non-interpretable models.
+It allows reasoning about a prediction with high-level concepts whilst achieving a competitive accuracy relative to its end-to-end counterpart.
 These concepts, however, need to be manually engineered and labelled to achieve such results.
 
 In this project, we improve the concept bottleneck design by automatically mining concepts from text explanations and improving their interpretability.
-To do so, we design a domain-independent concept mining framework using the state-of-the-art approaches from Inductive Logic Programming, Natural Language Processing and Deep Learning.
+To do so, we design a domain-independent concept mining framework using state-of-the-art approaches from Inductive Logic Programming, Natural Language Processing and Deep Learning.
 We showcase that the new framework is a lot better at finding useful concepts than its predecessor, developed by Jeyakumar et al. \cite{RefWorks:RefID:16-2021automatic}, capturing twice as much information about the final labels.\\
-In addition, we show that Inductive Logic Programming can be an effective framework for tackling sequence-to-sequence NLP tasks with few available examples, as we achieved Jaccard Index values of 0.55 and 0.85 for two challenging tasks. \\
-Finally, to improve the concept bottleneck explainability, we designed a fully interpretable probabilistic logic-based classification framework. It even outperformed the current end-to-end approaches for the MLB-V2E and the sudoku grid validity datasets.
+In addition, we demonstrate that Inductive Logic Programming can be an effective framework for tackling sequence-to-sequence NLP tasks with few available examples, as we achieved Jaccard Index values of 0.55 and 0.85 for two challenging tasks. \\
+Finally, to improve the concept bottleneck explainability, we designed a fully interpretable probabilistic logic-based classification framework. The framework outperforms the current end-to-end approaches for the MLB-V2E and the sudoku grid validity datasets.
 
 \end{abstract}
 
