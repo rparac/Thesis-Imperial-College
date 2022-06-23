@@ -9,7 +9,7 @@ In doing so, we have discovered the following findings:
     \item \textbf{Logic-based methods can effectively be used to tackle some NLP seq2seq problems}.
     Such an approach was crucial as the datasets were tiny, consisting of only around 100 examples per problem.
     The dataset size made it impossible to use state-of-the-art NLP techniques such as transformers.
-    On the other hand, the solutions made by hand-crafting or learning a set of rules could achieve good performance despite the dataset size.
+    The solutions made by hand-crafting or learning a set of rules, on the other hand, could achieve good performance despite the dataset size.
     However, the limitation is the lack of scalability of the underlying ILASP \cite{RefWorks:RefID:54-ilasp} system used to learn a set of rules.
     It was applied successfully on the generalisation task, while it was far off its theoretical optimality guarantee for the atomisation task.
     When we applied it successfully, it did produce a better solution than a hand-crafted set of rules.
@@ -17,19 +17,20 @@ In doing so, we have discovered the following findings:
     
     \item \textbf{The newly proposed CoDEx pipeline significantly outperforms its predecessor}. 
     We have replaced the extraction part of the original pipeline with the new atomisation and generalisation stages.
-    A new set of concepts is much more informable and better at predicting the final label.
-    There is also an indication that the concepts it produced are better, but a large-scale human study must be conducted to validate such results.
+    With them, the new set of concepts conveys twice as much information about the final label compared to its predecessor.
+    There is also an indication that the concepts produced by the new pipeline provide better explanations as the qualitative analysis preferred them in all of the cases tested. 
     However, the CoDEx module still has room for improvement, as it cannot account for concepts occurring in the video but not explicitly in the explanation.
-    This limitation leads to poor concept precision values.
-    In addition, the limitation makes applying the sequential training procedure challenging, which splits the training of concept and label prediction parts of the network.
-    Sequential training would be preferred, given that the joint training may not truly use concepts to predict the results.
-    We further show that the CoDEx pipelines, although well performing, do not extract a valuable set of concepts given a set of general image descriptions.
-    So, the applicability scope of this method needs to be further investigated. 
-    But, we believe it should work for any domain where the human-generated explanation is written to describe the final label.
+    This limitation makes applying the sequential training procedure challenging, which splits the training of concept and label prediction parts of the network.
+    Sequential training would be preferred, given that the joint training may not always truly use concepts to predict the results \cite{RefWorks:RefID:68-margeloiu2021concept}.
+    We further show that applying the method to a dataset of a different modality was possible with no difference to the concept extraction pipeline.
+    The same experiment demonstrated that the CoDEx pipeline could produce highly accurate results when applied to a dataset with general image descriptions.
+    The quality of the explanations was worse since the well-mined concepts that not labelled in most images where they occurred.
+    So, we believe that the proposed method should work in any domain where the human-generated explanation is written to describe why the data point should be classified with a particular label.
+    Such a style of writing presents relevant pieces of information much more consistently.
     
     \item \textbf{The proposed logic-based classification produces high-performing and easily explainable solutions}.
-    We show that the method can be applied to the concept bottleneck pipeline exceptionally well.
-    It helped achieve much better results for the MLB-V2E dataset \cite{RefWorks:RefID:16-2021automatic} compared to the original concept-bottleneck models while being completely interpretable.
+    When applied to the sudoku validity dataset, we show that the method produces a completely accurate solution even when 80\% of training examples are subject to the distribution shift.
+    Additionally, applying the method to the concept bottleneck pipeline helped increase the model performance whilst providing a clear link between the predicted concepts and the final label.
 \end{enumerate}
 
 \section{Future work}
@@ -58,17 +59,14 @@ We expect that an improved architecture should improve concept prediction perfor
 Comparing the performance with the original concept bottleneck \cite{RefWorks:RefID:35-koh2020concept} would also be beneficial.
 This work extends upon the original idea by mining the concepts from explanations.
 % INSERT The caltech-ucsd birds-200-2011 dataset DONE
-The original work uses a human-engineered set of valuable concepts, which they applied to the CUB-birds dataset (X) \cite{RefWorks:RefID:69-wah2011caltech-ucsd}.
+The original work uses a human-engineered set of valuable concepts, which they applied to the CUB-birds dataset \cite{RefWorks:RefID:69-wah2011caltech-ucsd}.
 Comparing with the same dataset would give more insight into the generality of the concepts extracted by the CoDEx pipeline.
-
-
-Moreover, the concept explanation quality should be evaluated using a human study, such as a Mechanical Turk analogous to \cite{RefWorks:RefID:16-2021automatic}.
+Moreover, the concept explanation quality could be evaluated using a human study, such as a Mechanical Turk analogous to \cite{RefWorks:RefID:16-2021automatic}.
 Such a study would give more confidence regarding the quality of generated explanation.
 In addition, we should also construct a human study interpreting the logic-based classification framework.
 
 Finally, we could improve upon the atomisation procedure.
 The atomisation procedure is the main culprit behind any concepts that are invalid sentences.
-With the Jaccard score at around 0.5, the atomisation task has a lot of room for improvement. \\
-% INSERT reference Exploring the limits of transfer learning with a unified text-to-text transformer. DONE
+With the Jaccard score at around 0.55, the atomisation task has a room for improvement. \\
 A possible approach for handling this issue may involve trying to solve this problem using a seq2seq transformer such as T5 \cite{RefWorks:RefID:88-raffel2020exploring}.
 It would require greatly extending the existing dataset, but it would undoubtedly perform better with a sufficient number of examples.

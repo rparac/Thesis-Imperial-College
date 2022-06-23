@@ -536,11 +536,12 @@ It is done by creating a positive example for each sentence we wish to produce.
 Just having positive examples is not sufficient.
 If we only had positive examples, the model could produce the following solution to satisfy all ILASP examples:
 \begin{verbatim}
-in_generalised_sent(T) :- dep(_, T, _).
-in_generalised_sent(T) :- dep(_, _, T).
+0{ in_generalised_sent(T) }1 :- dep(_, T, _).
+0{ in_generalised_sent(T) }1 :- dep(_, _, T).
 \end{verbatim}
-This solution will return a power set of all possible token combinations, some of which are correct generalisations.
-So, we produce a negative example with the \verb_goal_ predicate in the exclusion for each text sentence example.
+This solution will return a power set of all possible token combinations since all tokens are associated with at least one \verb_dep_ tag. 
+The solutions we should produce are elements of this power set, so the positive ILASP examples will be trivially satisfied.
+Hence, we produce a negative example with the \verb_goal_ predicate in the exclusion for each text sentence example.
 The \verb_goal_ predicate, defined only in the context of negative examples, is true if \verb+in_generalised_sent+ atoms correspond precisely to a positive example.
 
 
@@ -873,7 +874,7 @@ The results are summarised in tables below:
  \multicolumn{4}{|c|}{In Domain Dataset} \\
  \hline
  \hline
-  &Jaccard Index&Precision&Recall\\ 
+  &Jaccard Index&Set-Precision&Set-Recall\\ 
  \hline
  Hand-crafted $H$ & 0.79 $\pm$ 0.03 & 0.86 $\pm$ 0.03 & 0.80 $\pm$ 0.03 \\ 
  Learned $H$ & 0.92 $\pm$ 0.02 & 0.95 $\pm$ 0.02 & 0.94 $\pm$ 0.02 \\
@@ -887,7 +888,7 @@ The results are summarised in tables below:
  \multicolumn{4}{|c|}{Out Of Domain Dataset} \\
  \hline
  \hline
-  &Jaccard Index&Precision&Recall\\ 
+  &Jaccard Index&Set-Precision&Set-Recall\\ 
  \hline
  Hand-crafted $H$ & 0.71 $\pm$ 0.04 & 0.72 $\pm$ 0.03 & 0.83 $\pm$ 0.04 \\ 
  Learned $H$ & 0.83 $\pm$ 0.03 & 0.84 $\pm$ 0.03 & 0.86 $\pm$ 0.03 \\ 
