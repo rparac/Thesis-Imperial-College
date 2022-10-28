@@ -140,7 +140,9 @@ p(y_e | \vec{z}, H) =
 
 Combining all the results presented, we can derive the following:
 \begin{align}
-H_{\text{ML}}
+H_{\text{ML}} 
+& = \arg\max_{H}
+p(\vec{y}|H, \vec{X}) \nonumber \\
 & = \arg\min_{H} 
 -\sum_e \ln \left( \expct_{\vec{z} \sim p(\vec{z}| \vec{x}_e)}[p(y_e|\vec{z},H)] \right ) 
 && \text{(by \ref{ex6.4} and \ref{ex6.5})} \nonumber \\
@@ -710,7 +712,7 @@ Their results are summarised in the table below:
  \hline
   End-to-end model&Concept bottleneck model & Prob-NSL concept bottleneck \\ 
  \hline
- 0.687 $\pm$ 0.004 & 0.685 $\pm$ 0.005 & 0.910 $\pm$ 0.023 \\
+ 0.687 $\pm$ 0.004 & 0.685 $\pm$ 0.005 & 0.650 $\pm$ 0.016 \\
  \hline
 \end{tabular}
 \end{center}
